@@ -1,0 +1,147 @@
+package frontend.parser.function;
+
+import midend.error.*;
+import midend.error.Error;
+import frontend.io.Output;
+import frontend.io.ParserOutput;
+import frontend.lexer.LexType;
+import frontend.lexer.LexerIterator;
+import frontend.lexer.Token;
+import frontend.parser.declaration.Btype;
+import frontend.parser.expression.ConstExp;
+import frontend.parser.expression.ExpParser;
+import frontend.parser.statement.*;
+import midend.symbol.SymbolFunc;
+import midend.symbol.SymbolTable;
+import midend.symbol.SymbolVar;
+
+import java.util.ArrayList;
+
+public class FuncDefParser {
+    private LexerIterator iterator;
+    private SymbolTable curSymbolTable;
+
+    public FuncDefParser(LexerIterator iterator, SymbolTable curSymbolTable) {
+        this.iterator = iterator;
+        this.curSymbolTable = curSymbolTable;
+    }
+
+    public FuncDef parseFuncDef() {
+        ArrayList<FuncFParam> funcFParams = new ArrayList<>();
+        FuncType funcType = new FuncType(iterator.read());
+        boolean checkVoidReturn = funcType.getType() == -1;
+        Output output = new Output("<FuncType>");
+        ParserOutput.addOutput(output);
+        Token Ident = iterator.read();
+        /*（若未重定义）新建函数符号，并加入原符号表*/
+        SymbolFunc symbolFunc = new SymbolFunc(Ident.getVal(), Ident.getLineNum(), funcType.getType());
+        if (curSymbolTable.checkReName(Ident.getVal())) {
+            Error error = new Error(Ident.getLineNum(), ErrorType.b);
+            ErrorTable.addError(error);
+        }
+        else {
+            curSymbolTable.addSymbol(symbolFunc);
+        }
+        /*创建新的符号表，之后读到的函数参数都加入新符号表*/
+        curSymbolTable = new SymbolTable(curSymbolTable);
+        iterator.read(); // (
+        if (iterator.preRead(1).getLexType() == LexType.INTTK) {
+            funcFParams.add(parseFuncFParam(symbolFunc));
+            while (iterator.preRead(1).getLexType() == LexType.COMMA) {
+                iterator.read(); // ,
+                funcFParams.add(parseFuncFParam(symbolFunc));
+            }
+            Output output1 = new Output("<FuncFParams>");
+            ParserOutput.addOutput(output1);
+        }
+        //iterator.read(); // )
+        checkErrorJ();
+        BlockParser blockParser = new BlockParser(iterator, curSymbolTable, 0);
+        //Block block = blockParser.parseBlock(); //block 这里不再新建符号表
+        ArrayList<BlockItem> blockItems = new ArrayList<>();
+        iterator.read(); // {
+        while (iterator.preRead(1).getLexType() != LexType.RBRACE) {
+            blockItems.add(blockParser.parseBlockItem(checkVoidReturn));
+        }
+        iterator.read(); // }
+        Output output2 = new Output("<Block>");
+        ParserOutput.addOutput(output2);
+        Block block = new Block(blockItems);
+        /*检查return语句是否与函数类型匹配*/
+        if (funcType.getType() == 0) { //int
+            if (block.getBlockItems().size() == 0) {
+                Error error = new Error(iterator.readLast().getLineNum(), ErrorType.g);
+                ErrorTable.addError(error);
+            }
+            else {
+                Stmt stmt = block.getBlockItems().get(block.getBlockItems().size() - 1).getStmt();
+                if (!(stmt instanceof StmtReturn)) { // 无需考虑数据流？ todo
+                    Error error = new Error(iterator.readLast().getLineNum(), ErrorType.g);
+                    ErrorTable.addError(error);
+                }
+            }
+        }
+        Output output3 = new Output("<FuncDef>");
+        ParserOutput.addOutput(output3);
+        return new FuncDef(funcType, Ident, funcFParams, block);
+    }
+
+    public FuncFParam parseFuncFParam(SymbolFunc symbolFunc) {
+        ConstExp constExp = null;
+        iterator.read();
+        Btype btype = new Btype("int");
+        Token Ident = iterator.read();
+        int cnt = 0;
+        while (iterator.preRead(1).getLexType() == LexType.LBRACK) {
+            cnt++;
+            iterator.read(); // [
+            if (isNextConstExp()) { //考虑右框缺失
+                ExpParser expParser = new ExpParser(iterator, curSymbolTable);
+                constExp = expParser.parseConstExp(); //parseConstExp
+            }
+            //iterator.read(); // ]
+            checkErrorK();
+        }
+        SymbolVar symbolVar = new SymbolVar(Ident.getVal(), Ident.getLineNum(), cnt);
+        if (curSymbolTable.checkReName(Ident.getVal())) {
+            Error error = new Error(Ident.getLineNum(), ErrorType.b);
+            ErrorTable.addError(error);
+        }
+        else {
+            curSymbolTable.addSymbol(symbolVar);
+            symbolFunc.addParams(symbolVar);
+        }
+        Output output = new Output("<FuncFParam>");
+        ParserOutput.addOutput(output);
+        return new FuncFParam(btype, Ident, constExp, cnt);
+    }
+
+    public void checkErrorJ() {
+        if (iterator.preRead(1).getLexType() == LexType.RPARENT) {
+            iterator.read();
+        }
+        else {
+            Error error = new Error(iterator.readLast().getLineNum(), ErrorType.j);
+            ErrorTable.addError(error);
+        }
+    }
+
+    public void checkErrorK() {
+        if (iterator.preRead(1).getLexType() == LexType.RBRACK) {
+            iterator.read();
+        }
+        else {
+            Error error = new Error(iterator.readLast().getLineNum(), ErrorType.k);
+            ErrorTable.addError(error);
+        }
+    }
+
+    public boolean isNextConstExp() {
+        LexType lexType = iterator.preRead(1).getLexType();
+        if (lexType == LexType.PLUS || lexType == LexType.MINU || lexType == LexType.NOT
+                || lexType == LexType.LPARENT || lexType == LexType.IDENFR || lexType == LexType.INTCON) {
+            return true;
+        }
+        return false;
+    }
+}
