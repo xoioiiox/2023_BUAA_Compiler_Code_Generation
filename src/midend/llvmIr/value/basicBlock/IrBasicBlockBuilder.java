@@ -25,6 +25,8 @@ public class IrBasicBlockBuilder {
     private Block block;
     private NameCnt nameCnt;
     private ArrayList<IrBasicBlock> basicBlocks;
+    private ArrayList<IrBr> breaks;
+    private ArrayList<IrBr> continues;
     private String funcName;
 
     public IrBasicBlockBuilder(String funcName, SymbolTable symbolTable, Block block, NameCnt nameCnt) {
@@ -33,6 +35,16 @@ public class IrBasicBlockBuilder {
         this.block = block;
         this.nameCnt = nameCnt;
         this.basicBlocks = new ArrayList<>();
+        this.breaks = new ArrayList<>();
+        this.continues = new ArrayList<>();
+    }
+
+    public ArrayList<IrBr> getBreaks() {
+        return breaks;
+    }
+
+    public ArrayList<IrBr> getContinues() {
+        return continues;
     }
 
     public ArrayList<IrBasicBlock> genIrBasicBlock() { //todo 单独;
@@ -46,6 +58,8 @@ public class IrBasicBlockBuilder {
                     IrBasicBlockBuilder basicBlockBuilder
                             = new IrBasicBlockBuilder(this.funcName, symbolTable1, (Block) stmt, this.nameCnt);
                     this.basicBlocks.addAll(basicBlockBuilder.genIrBasicBlock()); //todo check
+                    this.breaks.addAll(basicBlockBuilder.getBreaks());
+                    this.continues.addAll(basicBlockBuilder.getContinues());
                 }
                 else if (stmt instanceof StmtIf) {
                     //this.basicBlocks.addAll(genIrStmtIf((StmtIf) stmt));
@@ -66,9 +80,11 @@ public class IrBasicBlockBuilder {
                         break;
                     }
                     IrInstructionBuilder instructionBuilder
-                            = new IrInstructionBuilder(this.symbolTable, blockItem1, nameCnt);
+                            = new IrInstructionBuilder(this.symbolTable, blockItem1, this.nameCnt);
                     ArrayList<IrInstruction> instructions = instructionBuilder.genIrInstruction();
                     basicBlock.getInstructions().addAll(instructions);
+                    this.breaks.addAll(instructionBuilder.getBreaks());
+                    this.continues.addAll(instructionBuilder.getContinues());
                 }
                 this.basicBlocks.add(basicBlock);
             }
@@ -77,7 +93,52 @@ public class IrBasicBlockBuilder {
     }
 
     public void genIrStmtFor(StmtFor stmtFor) {
-
+        // 处理for头-执行forStmt1初始化语句
+        IrBasicBlock curBasicBlock = this.basicBlocks.get(this.basicBlocks.size() - 1); //当前基本块
+        ForStmt forStmt1 = stmtFor.getForStmt1();
+        StmtAssign stmtAssign1 = new StmtAssign(forStmt1.getlVal(), forStmt1.getExp());
+        BlockItem blockItem = new BlockItem(stmtAssign1);
+        IrInstructionBuilder instructionBuilder
+                = new IrInstructionBuilder(this.symbolTable, blockItem, this.nameCnt);
+        curBasicBlock.getInstructions().addAll(instructionBuilder.genIrInstruction());
+        // 处理cond
+        String condLabel = String.valueOf(this.nameCnt.getCntOnly());
+        ArrayList<ArrayList<IrBasicBlock>> blocks = genCond(stmtFor.getCond());
+        //gen for主体stmt
+        ArrayList<BlockItem> blockItems = new ArrayList<>();
+        blockItems.add(new BlockItem(stmtFor.getStmt()));
+        Block block1 = new Block(blockItems);
+        IrBasicBlockBuilder irBasicBlockBuilder = new IrBasicBlockBuilder(this.funcName, this.symbolTable, block1, this.nameCnt);
+        ArrayList<IrBasicBlock> irBasicBlocks = irBasicBlockBuilder.genIrBasicBlock(); //过程中会自动新建基本块
+        this.basicBlocks.addAll(irBasicBlocks);
+        ArrayList<IrBr> breaks = irBasicBlockBuilder.getBreaks();
+        ArrayList<IrBr> continues = irBasicBlockBuilder.getContinues();
+        // forStmt2增量语句
+        String forStmt2Begin = String.valueOf(this.nameCnt.getCntOnly());
+        IrBasicBlock forStmt2Block = new IrBasicBlock(String.valueOf(this.nameCnt.getCnt()));
+        this.basicBlocks.add(forStmt2Block);
+        ForStmt forStmt2 = stmtFor.getForStmt2();
+        StmtAssign stmtAssign2 = new StmtAssign(forStmt2.getlVal(), forStmt2.getExp());
+        blockItem = new BlockItem(stmtAssign2);
+        instructionBuilder
+                = new IrInstructionBuilder(this.symbolTable, blockItem, this.nameCnt);
+        forStmt2Block.getInstructions().addAll(instructionBuilder.genIrInstruction());
+        // 末尾追加跳转到For头语句
+        IrBr brIfEnd = new IrBr(condLabel);
+        forStmt2Block.addInstruction(brIfEnd);
+        String forEndLabel = String.valueOf(this.nameCnt.getCntOnly());
+        // 对于整个cond的最后一条语句，若不为真，则要跳转到for语句后接的基本块
+        ArrayList<IrBasicBlock> basicBlocks1 = blocks.get(blocks.size() - 1);
+        IrBasicBlock basicBlock1 = basicBlocks1.get(basicBlocks1.size() - 1);
+        IrInstruction instruction = basicBlock1.getInstructions().get(basicBlock1.getInstructions().size() - 1);
+        IrBr irBr = (IrBr) instruction;
+        irBr.setFalseLabel(forEndLabel);
+        for (IrBr breakBr : breaks) {
+            breakBr.setLabel(forEndLabel);
+        }
+        for (IrBr continueBr : continues) {
+            continueBr.setLabel(forStmt2Begin);
+        }
     }
 
     public void genIrStmtIf(StmtIf stmtIf) {
@@ -94,6 +155,8 @@ public class IrBasicBlockBuilder {
         IrBasicBlockBuilder irBasicBlockBuilder = new IrBasicBlockBuilder(this.funcName, this.symbolTable, block1, this.nameCnt);
         ArrayList<IrBasicBlock> irBasicBlocks = irBasicBlockBuilder.genIrBasicBlock();
         this.basicBlocks.addAll(irBasicBlocks);
+        this.breaks.addAll(irBasicBlockBuilder.getBreaks());
+        this.continues.addAll(irBasicBlockBuilder.getContinues());
         IrBasicBlock lastBlock = irBasicBlocks.get(irBasicBlocks.size() - 1);
         IrBr brIfEnd = new IrBr("#");
         lastBlock.addInstruction(brIfEnd);
@@ -157,10 +220,10 @@ public class IrBasicBlockBuilder {
         ArrayList<RelExp> relExps = eqExp.getRelExps();
         ArrayList<Token> signs = eqExp.getSigns();
         IrValue op1 = genRelExp(relExps.get(0), curBasicBlock);
-        if (signs.size() == 0) {
+        if (signs.size() == 0 && eqExp.getRelExps().get(0).getAddExps().size() == 1) {
             String name = "%" + this.nameCnt.getCnt();
             IrValue value = new IrValue("0");
-            IrIcmp icmp = new IrIcmp(name, IrIcmpType.ne, new IrIntType(1), value, op1);
+            IrIcmp icmp = new IrIcmp(name, IrIcmpType.ne, new IrIntType(32), value, op1);
             curBasicBlock.addInstruction(icmp);
             IrBr irBr = new IrBr(icmp, String.valueOf(this.nameCnt.getCntOnly()), "#");
             curBasicBlock.addInstruction(irBr);
@@ -221,10 +284,15 @@ public class IrBasicBlockBuilder {
                 icmp = new IrIcmp(name, IrIcmpType.sge, valueType, op1, op2);
             }
             curBasicBlock.addInstruction(icmp);
-            String name1 = "%" + this.nameCnt.getCnt();
-            IrZext irZext = new IrZext(name1, icmp, new IrIntType(32));
-            op1 = irZext;
-            curBasicBlock.addInstruction(irZext);
+            if (i != addExps.size() - 1) {
+                String name1 = "%" + this.nameCnt.getCnt();
+                IrZext irZext = new IrZext(name1, icmp, new IrIntType(32));
+                op1 = irZext;
+                curBasicBlock.addInstruction(irZext);
+            }
+            else {
+                op1 = icmp;
+            }
         }
         return op1;
     }

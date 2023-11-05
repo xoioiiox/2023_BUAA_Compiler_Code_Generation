@@ -17,6 +17,7 @@ import midend.llvmIr.value.function.IrFunction;
 import midend.llvmIr.value.function.NameCnt;
 import midend.llvmIr.value.instruction.binary.IrBinaryInst;
 import midend.llvmIr.value.instruction.binary.IrBinaryType;
+import midend.llvmIr.value.instruction.cond.IrBr;
 import midend.llvmIr.value.instruction.memory.IrAlloca;
 import midend.llvmIr.value.instruction.memory.IrLoad;
 import midend.llvmIr.value.instruction.memory.IrStore;
@@ -33,6 +34,8 @@ public class IrInstructionBuilder {
     private SymbolTable symbolTable;
     private BlockItem blockItem;
     private ArrayList<IrInstruction> irInstructions;
+    private ArrayList<IrBr> breaks;
+    private ArrayList<IrBr> continues;
     private NameCnt nameCnt;
     private IrValue addExpRet;
 
@@ -41,6 +44,8 @@ public class IrInstructionBuilder {
         this.blockItem = blockItem;
         this.nameCnt = nameCnt;
         this.irInstructions = new ArrayList<>();
+        this.breaks = new ArrayList<>();
+        this.continues = new ArrayList<>();
     }
 
     // StmtIf
@@ -52,6 +57,14 @@ public class IrInstructionBuilder {
 
     public ArrayList<IrInstruction> getIrInstructions() {
         return irInstructions;
+    }
+
+    public ArrayList<IrBr> getBreaks() {
+        return breaks;
+    }
+
+    public ArrayList<IrBr> getContinues() {
+        return continues;
     }
 
     public ArrayList<IrInstruction> genIrInstruction() {
@@ -124,11 +137,15 @@ public class IrInstructionBuilder {
     }
 
     public void genStmtBreak(StmtBreak stmtBreak) {
-
+        IrBr irBr = new IrBr("#");
+        this.irInstructions.add(irBr);
+        this.breaks.add(irBr);
     }
 
     public void genStmtContinue(StmtContinue stmtContinue) {
-
+        IrBr irBr = new IrBr("#");
+        this.irInstructions.add(irBr);
+        this.continues.add(irBr);
     }
 
     public void genStmtReturn(StmtReturn stmtReturn) {

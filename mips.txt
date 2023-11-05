@@ -12,27 +12,113 @@ j main
 main:
 li $t0, 1
 sw $t0, 0($fp)
-li $t0, 2
+lw $t0, 0($fp)
+sw $t0, 12($fp)
+lw $t0, 12($fp)
 sw $t0, 8($fp)
-
-lw $t0, 0($fp)
-sw $t0, 16($fp)
-lw $t0, 8($fp)
+li $v0, 5
+syscall
+sw $v0, 28($fp)
+lw $t0, 28($fp)
 sw $t0, 20($fp)
-
 lw $t0, 0($fp)
+sw $t0, 32($fp)
+lw $t0, 0($fp)
+sw $t0, 36($fp)
+lw $t0, 32($fp)
+lw $t1, 36($fp)
+mul $t2, $t0, $t1
+sw $t2, 40($fp)
+lw $t0, 40($fp)
 sw $t0, 24($fp)
 
-li $t0, 0
-sw $t0, 28($fp)
+lw $t0, 24($fp)
+sw $t0, 44($fp)
+lw $t0, 20($fp)
+sw $t0, 48($fp)
+lw $t0, 48($fp)
+li $t1, 1
+add $t2, $t0, $t1
+sw $t2, 52($fp)
 
-lw $t0, 28($fp)
-sw $t0, 36($fp)
+lw $t0, 8($fp)
+sw $t0, 56($fp)
+lw $t0, 56($fp)
+sw $t0, 16($fp)
+lw $t0, 0($fp)
+sw $t0, 60($fp)
+lw $t0, 8($fp)
+sw $t0, 64($fp)
+lw $t0, 60($fp)
+lw $t1, 64($fp)
+add $t2, $t0, $t1
+sw $t2, 68($fp)
+lw $t0, 68($fp)
+sw $t0, 8($fp)
+lw $t0, 16($fp)
+sw $t0, 72($fp)
+lw $t0, 72($fp)
+sw $t0, 0($fp)
+
+lw $t0, 24($fp)
+sw $t0, 76($fp)
+lw $t0, 76($fp)
+li $t1, 2
+div $t0, $t1
+mfhi $t2
+sw $t2, 80($fp)
+
 
 li $v0, 11
-li $a0, 49
+li $a0, 114
+syscall
+li $v0, 11
+li $a0, 111
+syscall
+li $v0, 11
+li $a0, 117
+syscall
+li $v0, 11
+li $a0, 110
+syscall
+li $v0, 11
+li $a0, 100
+syscall
+li $v0, 11
+li $a0, 32
+syscall
+lw $t0, 24($fp)
+sw $t0, 84($fp)
+li $v0, 1
+lw $a0, 84($fp)
+syscall
+li $v0, 11
+li $a0, 58
+syscall
+li $v0, 11
+li $a0, 32
+syscall
+lw $t0, 0($fp)
+sw $t0, 88($fp)
+li $v0, 1
+lw $a0, 88($fp)
+syscall
+li $v0, 11
+li $a0, 10
 syscall
 
+lw $t0, 24($fp)
+sw $t0, 92($fp)
+
+
+lw $t0, 24($fp)
+sw $t0, 96($fp)
+lw $t0, 96($fp)
+li $t1, 1
+add $t2, $t0, $t1
+sw $t2, 100($fp)
+lw $t0, 100($fp)
+sw $t0, 24($fp)
 
 li $v0, 0
 li $v0, 10
