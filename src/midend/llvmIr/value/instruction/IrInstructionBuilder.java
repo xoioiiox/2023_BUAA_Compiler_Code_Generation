@@ -12,6 +12,7 @@ import midend.llvmIr.IrValue;
 import midend.llvmIr.type.IrIntType;
 import midend.llvmIr.type.IrValueType;
 import midend.llvmIr.type.IrVoidType;
+import midend.llvmIr.value.basicBlock.IrBasicBlock;
 import midend.llvmIr.value.function.IrFunction;
 import midend.llvmIr.value.function.NameCnt;
 import midend.llvmIr.value.instruction.binary.IrBinaryInst;
@@ -33,6 +34,7 @@ public class IrInstructionBuilder {
     private BlockItem blockItem;
     private ArrayList<IrInstruction> irInstructions;
     private NameCnt nameCnt;
+    private IrValue addExpRet;
 
     public IrInstructionBuilder(SymbolTable symbolTable, BlockItem blockItem, NameCnt nameCnt) {
         this.symbolTable = symbolTable;
@@ -41,20 +43,31 @@ public class IrInstructionBuilder {
         this.irInstructions = new ArrayList<>();
     }
 
+    // StmtIf
+    public IrInstructionBuilder(SymbolTable symbolTable, NameCnt nameCnt) {
+        this.symbolTable = symbolTable;
+        this.nameCnt = nameCnt;
+        this.irInstructions = new ArrayList<>();
+    }
+
+    public ArrayList<IrInstruction> getIrInstructions() {
+        return irInstructions;
+    }
+
     public ArrayList<IrInstruction> genIrInstruction() {
         if (this.blockItem.getStmt() != null) {
             Stmt stmt = this.blockItem.getStmt();
             if (stmt instanceof StmtAssign) {
                 genStmtAssign((StmtAssign) stmt);
             }
-            else if (stmt instanceof StmtExp) {
-                genExp(((StmtExp) stmt).getExp());
-            }
             else if (stmt instanceof StmtBreak) {
-
+                genStmtBreak((StmtBreak) stmt);
             }
             else if (stmt instanceof StmtContinue) {
-
+                genStmtContinue((StmtContinue) stmt);
+            }
+            else if (stmt instanceof StmtExp) {
+                genExp(((StmtExp) stmt).getExp());
             }
             else if (stmt instanceof StmtGetInt) {
                 genStmtGetInt((StmtGetInt) stmt);
@@ -108,6 +121,14 @@ public class IrInstructionBuilder {
         IrValue rightOp = genExp(stmtAssign.getExp());
         IrStore irStore = new IrStore(leftOp, rightOp);
         this.irInstructions.add(irStore);
+    }
+
+    public void genStmtBreak(StmtBreak stmtBreak) {
+
+    }
+
+    public void genStmtContinue(StmtContinue stmtContinue) {
+
     }
 
     public void genStmtReturn(StmtReturn stmtReturn) {
@@ -212,12 +233,17 @@ public class IrInstructionBuilder {
                 irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.add, op1, op2);
             }
             else if (signs.get(i).getLexType() == LexType.MINU) {
-                irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.minu, op1, op2);
+                irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.sub, op1, op2);
             }
             this.irInstructions.add(irBinaryInst);
             op1 = irBinaryInst;
         }
+        this.addExpRet = op1;
         return op1;
+    }
+
+    public IrValue getAddExpRet() {
+        return addExpRet;
     }
 
     public IrValue genMulExp(MulExp mulExp) {
@@ -234,7 +260,7 @@ public class IrInstructionBuilder {
                 irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.mul, op1, op2);
             }
             else if (signs.get(i).getLexType() == LexType.DIV) {
-                irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.div, op1, op2);
+                irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.sdiv, op1, op2);
             }
             else if (signs.get(i).getLexType() == LexType.MOD) {
                 irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.mod, op1, op2);

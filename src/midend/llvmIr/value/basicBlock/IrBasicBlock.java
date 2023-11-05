@@ -14,8 +14,17 @@ public class IrBasicBlock extends IrValue {
         this.instructions = new ArrayList<>();
     }
 
+    @Override
+    public void setName(String name) {
+        super.setName(name);
+    }
+
     public ArrayList<IrInstruction> getInstructions() {
         return instructions;
+    }
+
+    public void addInstruction(IrInstruction instruction) {
+        this.instructions.add(instruction);
     }
 
     @Override

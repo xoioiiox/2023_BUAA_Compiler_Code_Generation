@@ -11,9 +11,15 @@ public class NameCnt {
         return res;
     }
 
-    public int getBlockCnt() {
+    /*public int getBlockCnt() {
         int res = blockCnt;
         blockCnt++;
         return res;
+    }*/
+
+    public int getCntOnly() {
+        return cnt;
     }
+
+    //public int getBlockCntOnly() {return blockCnt;}
 }

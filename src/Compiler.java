@@ -29,15 +29,15 @@ public class Compiler {
         CompUnit compUnit = new CompUnit(iterator, symbolTable);
         compUnit.parseCompUnit();
         /*-------------中间代码--------------*/
-        /*try {
+        try {
             PrintStream printStream = new PrintStream("llvm_ir.txt");
             System.setOut(printStream); //将sout重定向到文件输出
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
-        }*/
+        }
         IrBuilder irBuilder = new IrBuilder(compUnit);
         IrModule irModule = irBuilder.genIrModule();
-        //irModule.IrPrint();
+        irModule.IrPrint();
         /*-------------目标代码--------------*/
         try {
             PrintStream printStream = new PrintStream("mips.txt");

@@ -5,7 +5,7 @@ import midend.llvmIr.type.IrValueType;
 import java.util.ArrayList;
 
 public class IrUser extends IrValue {
-    private ArrayList<IrUse> operands;
+    private ArrayList<IrUse> operands; // 或许用IrValue就可以了？
 
     public IrUser(IrValueType irValueType) {
         super(irValueType);

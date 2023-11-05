@@ -63,7 +63,7 @@ public class IrFunctionBuilder {
         IrFunctionType functionType = new IrFunctionType(retType, paramTypes, names);
         /*------function block------*/
         IrBasicBlockBuilder basicBlockBuilder
-                = new IrBasicBlockBuilder(symbolTable, funcDef.getBlock(), nameCnt);
+                = new IrBasicBlockBuilder(funcDef.getIdent().getVal(), symbolTable, funcDef.getBlock(), nameCnt);
         ArrayList<IrBasicBlock> basicBlocks  = basicBlockBuilder.genIrBasicBlock();
         IrFunction function = new IrFunction("@" + this.funcDef.getIdent().getVal(),
                 functionType, this.funcDef.isMainFunc(), basicBlocks);

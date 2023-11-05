@@ -2,9 +2,9 @@ package midend.llvmIr.value.instruction.binary;
 
 public enum IrBinaryType {
     add,
-    minu,
+    sub,
     mul,
-    div,
-    mod
+    sdiv,
+    mod // todo 取模运算?
 
 }

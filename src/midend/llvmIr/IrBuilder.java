@@ -59,7 +59,6 @@ public class IrBuilder {
         IrFunctionBuilder irFunctionBuilder = new IrFunctionBuilder(symbolTable1, this.compUnit.getMainFunc());
         /*-----------mainFunc中的index从1开始-----------*/
         irFunctionBuilder.getNameCnt().getCnt();
-        irFunctionBuilder.getNameCnt().getBlockCnt();
         irFunctions.add(irFunctionBuilder.genIrFunction());
         this.irModule = new IrModule(irGlobalVariables, irFunctions);
         return this.irModule;
