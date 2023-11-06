@@ -39,7 +39,7 @@ public class Compiler {
         IrModule irModule = irBuilder.genIrModule();
         irModule.IrPrint();
         /*-------------目标代码--------------*/
-        try {
+        /*try {
             PrintStream printStream = new PrintStream("mips.txt");
             System.setOut(printStream); //将sout重定向到文件输出
         } catch (FileNotFoundException e) {
@@ -47,7 +47,7 @@ public class Compiler {
         }
         MipsBuilder mipsBuilder = new MipsBuilder(irModule);
         MipsModule mipsModule = mipsBuilder.genMipsModule();
-        mipsModule.printMips();
+        mipsModule.printMips();*/
         /*-------------控制输出--------------*/
         /*try {
             PrintStream printStream = new PrintStream("error.txt");

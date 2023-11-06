@@ -9,6 +9,7 @@ public class IrAlloca extends IrInstruction {
 
     public IrAlloca(IrValueType irValueType, IrValue value) {
         super(irValueType);
+        this.setName(value.getName());
         this.value = value;
     }
 

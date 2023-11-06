@@ -1,6 +1,6 @@
 package midend.llvmIr.type;
 
-public class IrPointerType {
+public class IrPointerType extends IrValueType {
     private IrValueType innerType;
 
     public IrPointerType(IrValueType innerType) {

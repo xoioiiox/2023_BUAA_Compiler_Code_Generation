@@ -24,6 +24,10 @@ public class InitVal {
         return exp;
     }
 
+    public ArrayList<InitVal> getInitVals() {
+        return initVals;
+    }
+
     public int calculate(SymbolTable symbolTable) {
         return this.exp.calculate(symbolTable);
     }

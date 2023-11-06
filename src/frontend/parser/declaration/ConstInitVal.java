@@ -9,9 +9,7 @@ public class ConstInitVal {
     private ConstExp constExp;
     private ArrayList<ConstInitVal> constInitVals;
 
-    public ConstInitVal() {
-
-    }
+    public ConstInitVal() {}
 
     public ConstInitVal(ConstExp constExp) {
         this.constExp = constExp;
@@ -19,6 +17,10 @@ public class ConstInitVal {
 
     public ConstInitVal(ArrayList<ConstInitVal> constInitVals) {
         this.constInitVals = constInitVals;
+    }
+
+    public ArrayList<ConstInitVal> getConstInitVals() {
+        return constInitVals;
     }
 
     public int calculate(SymbolTable symbolTable) {

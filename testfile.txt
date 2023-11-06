@@ -1,20 +1,22 @@
-int main(){
-    int a1=1,a2;
-    a2=a1;
-    int temp;
-    int n,i;
-    n=getint();
-    for(i=a1*a1;i<n+1;i=i+1){
-        temp=a2;
-        a2=a1+a2;
-        a1=temp;
-        if(i%2==1){
-            continue;
-        }
-        printf("round %d: %d\n",i,a1);
-        if(i>19){
-            break;
-        }
+int a[3+3]={1,2,3,4,5,6};
+int b[3][3]={{3,6+2,5},{1,2,0},{0,0,0}};
+void a1(int x){
+    if(x>1){
+        a1(x-1);
     }
+    return;
+}
+int a2(int x,int y[]){
+    return x+y[2];
+}
+int a3(int x,int y[],int z[][3]){
+    return x*y[1]-z[2][1];
+}
+int main(){
+    int c[2][3]={{1,2,3},{0,0,0}};
+    a1(c[0][2]);
+    int x=a2(a[4],a);
+    int y=a3(b[0][1],b[1],b);
+    printf("%d",x+y);
     return 0;
 }

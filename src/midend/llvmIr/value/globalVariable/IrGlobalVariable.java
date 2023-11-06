@@ -25,7 +25,7 @@ public class IrGlobalVariable extends IrValue {
     public String toString() {
         return this.getName() + " = dso_local "
                 + ((isConst)? "constant": "global") + " "
-                + this.getValueType().toString() + " "
+                //+ this.getValueType().toString() + " "
                 + this.irConstant.toString();
     }
 }

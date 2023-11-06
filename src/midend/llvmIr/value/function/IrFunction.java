@@ -4,17 +4,22 @@ import midend.llvmIr.IrValue;
 import midend.llvmIr.type.IrFunctionType;
 import midend.llvmIr.type.IrValueType;
 import midend.llvmIr.value.basicBlock.IrBasicBlock;
+import midend.llvmIr.value.instruction.IrInstruction;
 
 import java.util.ArrayList;
 
 public class IrFunction extends IrValue {
     private boolean isMainFunc;
     private ArrayList<IrBasicBlock> basicBlocks;
+    private ArrayList<IrInstruction> paramInst;
 
-    public IrFunction(String name, IrValueType irValueType, boolean isMainFunc, ArrayList<IrBasicBlock> basicBlocks) {
+    public IrFunction(String name, IrValueType irValueType,
+                      boolean isMainFunc, ArrayList<IrBasicBlock> basicBlocks,
+                      ArrayList<IrInstruction> paramInst) {
         super(name, irValueType);
         this.isMainFunc = isMainFunc;
         this.basicBlocks = basicBlocks;
+        this.paramInst = paramInst;
     }
 
     public boolean isMainFunc() {
@@ -23,6 +28,10 @@ public class IrFunction extends IrValue {
 
     public ArrayList<IrBasicBlock> getBasicBlocks() {
         return basicBlocks;
+    }
+
+    public void setBasicBlocks(ArrayList<IrBasicBlock> basicBlocks) {
+        this.basicBlocks = basicBlocks;
     }
 
     /**
@@ -47,7 +56,6 @@ public class IrFunction extends IrValue {
             sb.append(" ");
             sb.append(paramNames.get(0));
             for (int i = 1; i < paramTypes.size(); i++) {
-                // todo 当前理应都是i32
                 sb.append(", ");
                 sb.append(paramTypes.get(i).toString());
                 sb.append(" ");
@@ -56,6 +64,10 @@ public class IrFunction extends IrValue {
         }
         sb.append(")");
         sb.append(" {");
+        for (IrInstruction instruction : paramInst) {
+            sb.append("\n");
+            sb.append(instruction.toString());
+        }
         for (IrBasicBlock basicBlock : this.basicBlocks) {
             sb.append(basicBlock.toString());
         }

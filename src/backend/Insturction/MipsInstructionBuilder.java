@@ -116,7 +116,7 @@ public class MipsInstructionBuilder {
             case sub: binaryType = BinaryType.sub; break;
             case mul: binaryType = BinaryType.mul; break;
             case sdiv: binaryType = BinaryType.div; break;
-            case mod: binaryType = BinaryType.mod; break;
+            case srem: binaryType = BinaryType.mod; break;
             //todo
         }
         return binaryType;

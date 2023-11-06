@@ -5,6 +5,6 @@ public enum IrBinaryType {
     sub,
     mul,
     sdiv,
-    mod // todo 取模运算?
+    srem
 
 }

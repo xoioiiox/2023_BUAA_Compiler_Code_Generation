@@ -17,6 +17,10 @@ public class FuncFParam {
         this.dimension = dimension;
     }
 
+    public ConstExp getConstExp() {
+        return constExp;
+    }
+
     public int getDimension() {
         return dimension;
     }

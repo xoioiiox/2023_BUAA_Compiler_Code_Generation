@@ -27,4 +27,8 @@ public class ConstDef {
     public ConstInitVal getConstInitVal() {
         return constInitVal;
     }
+
+    public ArrayList<ConstExp> getConstExps() {
+        return constExps;
+    }
 }

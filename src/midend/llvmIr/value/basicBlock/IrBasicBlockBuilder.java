@@ -5,6 +5,7 @@ import frontend.lexer.Token;
 import frontend.parser.expression.*;
 import frontend.parser.statement.*;
 import midend.llvmIr.IrValue;
+import midend.llvmIr.type.IrFunctionType;
 import midend.llvmIr.type.IrIntType;
 import midend.llvmIr.type.IrValueType;
 import midend.llvmIr.value.function.NameCnt;
@@ -57,7 +58,7 @@ public class IrBasicBlockBuilder {
                     SymbolTable symbolTable1 = new SymbolTable(symbolTable);
                     IrBasicBlockBuilder basicBlockBuilder
                             = new IrBasicBlockBuilder(this.funcName, symbolTable1, (Block) stmt, this.nameCnt);
-                    this.basicBlocks.addAll(basicBlockBuilder.genIrBasicBlock()); //todo check
+                    this.basicBlocks.addAll(basicBlockBuilder.genIrBasicBlock());
                     this.breaks.addAll(basicBlockBuilder.getBreaks());
                     this.continues.addAll(basicBlockBuilder.getContinues());
                 }
@@ -72,7 +73,7 @@ public class IrBasicBlockBuilder {
             }
             //普通语句
             else {
-                IrBasicBlock basicBlock = new IrBasicBlock(String.valueOf(this.nameCnt.getCnt())); //todo
+                IrBasicBlock basicBlock = new IrBasicBlock(String.valueOf(this.nameCnt.getCnt()));
                 for (; i < block.getBlockItems().size(); i++) {
                     BlockItem blockItem1 = block.getBlockItems().get(i);
                     Stmt stmt1 = blockItem1.getStmt();
@@ -170,7 +171,7 @@ public class IrBasicBlockBuilder {
             ArrayList<IrBasicBlock> irBasicBlocks1 = irBasicBlockBuilder1.genIrBasicBlock();
             this.basicBlocks.addAll(irBasicBlocks1);
         }
-        // 对于整个cond的最后一条语句，若不为真，则要跳转到else todo
+        // 对于整个cond的最后一条语句，若不为真，则要跳转到else
         ArrayList<IrBasicBlock> basicBlocks1 = blocks.get(blocks.size() - 1);
         IrBasicBlock basicBlock1 = basicBlocks1.get(basicBlocks1.size() - 1);
         IrInstruction instruction = basicBlock1.getInstructions().get(basicBlock1.getInstructions().size() - 1);
@@ -186,7 +187,7 @@ public class IrBasicBlockBuilder {
         for (LAndExp lAndExp : lAndExps) {
             lAndBlocks.add(genLAndExp(lAndExp));
         }
-        int num = this.nameCnt.getCntOnly(); // stmt1对应序号 todo 回填
+        int num = this.nameCnt.getCntOnly(); // stmt1对应序号
         String LorExpEnd = String.valueOf(num);
         for (ArrayList<IrBasicBlock> blocks: lAndBlocks) {
             // 对于或语句中每一个与语句的最后一条eq语句，若true则证明整个与语句为真，可直接跳转到stmt1（即或语句末尾
@@ -245,7 +246,7 @@ public class IrBasicBlockBuilder {
             op1 = icmp;
         }
         // 生成Br语句，加入当前基本块
-        // 正确则跳转下一与语句，否则跳到下一或语句 todo
+        // 正确则跳转下一与语句，否则跳到下一或语句
         IrBr irBr = new IrBr(op1, String.valueOf(this.nameCnt.getCntOnly()), "#");
         curBasicBlock.addInstruction(irBr);
         this.basicBlocks.add(curBasicBlock);
@@ -258,7 +259,7 @@ public class IrBasicBlockBuilder {
         IrValue op1;
         IrValue op2;
         AddExp addExp = addExps.get(0);
-        IrInstructionBuilder instructionBuilder = new IrInstructionBuilder(this.symbolTable, this.nameCnt); // todo 判断传参
+        IrInstructionBuilder instructionBuilder = new IrInstructionBuilder(this.symbolTable, this.nameCnt);
         instructionBuilder.genAddExp(addExp);
         curBasicBlock.getInstructions().addAll(instructionBuilder.getIrInstructions()); // 过程中产生的语句加入基本块
         op1 = instructionBuilder.getAddExpRet();

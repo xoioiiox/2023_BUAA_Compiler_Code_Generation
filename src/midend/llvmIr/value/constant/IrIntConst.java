@@ -16,6 +16,6 @@ public class IrIntConst extends IrConstant{
 
     @Override
     public String toString() {
-        return String.valueOf(this.val);
+        return this.getValueType().toString() + " " + this.val;
     }
 }

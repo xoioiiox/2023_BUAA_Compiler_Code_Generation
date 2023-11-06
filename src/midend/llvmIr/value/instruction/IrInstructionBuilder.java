@@ -2,23 +2,18 @@ package midend.llvmIr.value.instruction;
 
 import frontend.lexer.LexType;
 import frontend.lexer.Token;
-import frontend.parser.declaration.ConstDecl;
-import frontend.parser.declaration.Decl;
-import frontend.parser.declaration.VarDecl;
-import frontend.parser.declaration.VarDef;
+import frontend.parser.declaration.*;
 import frontend.parser.expression.*;
 import frontend.parser.statement.*;
 import midend.llvmIr.IrValue;
-import midend.llvmIr.type.IrIntType;
-import midend.llvmIr.type.IrValueType;
-import midend.llvmIr.type.IrVoidType;
-import midend.llvmIr.value.basicBlock.IrBasicBlock;
+import midend.llvmIr.type.*;
 import midend.llvmIr.value.function.IrFunction;
 import midend.llvmIr.value.function.NameCnt;
 import midend.llvmIr.value.instruction.binary.IrBinaryInst;
 import midend.llvmIr.value.instruction.binary.IrBinaryType;
 import midend.llvmIr.value.instruction.cond.IrBr;
 import midend.llvmIr.value.instruction.memory.IrAlloca;
+import midend.llvmIr.value.instruction.memory.IrGetElementPtr;
 import midend.llvmIr.value.instruction.memory.IrLoad;
 import midend.llvmIr.value.instruction.memory.IrStore;
 import midend.llvmIr.value.instruction.terminator.IrCall;
@@ -106,9 +101,10 @@ public class IrInstructionBuilder {
 
     public void genVarDecl(VarDecl varDecl) {
         for (VarDef varDef : varDecl.getVarDefs()) {
-            if (varDef.getConstExps().size() == 0) {
+            String name = "%" + this.nameCnt.getCnt();
+            int dim = varDef.getConstExps().size();
+            if (dim == 0) {
                 /*---生成IrValue---*/
-                String name = "%" + this.nameCnt.getCnt();
                 IrValueType valueType = new IrIntType(32);
                 IrValue value = new IrValue(name, valueType);
                 /*---内存分配指令---*/
@@ -123,8 +119,70 @@ public class IrInstructionBuilder {
                 Symbol symbol = new SymbolVar(varDef.getIdent().getVal(), varDef.getDimension(), value);
                 this.symbolTable.addSymbol(symbol);
             }
+            else if (dim == 1) {
+                /*---定义类型和值，并分配内存---*/
+                int eleNum = varDef.getConstExps().get(0).calculate(symbolTable);
+                IrValueType valueType = new IrArrayType(new IrIntType(32), eleNum);
+                IrValue value = new IrValue(name, valueType);
+                IrAlloca irAlloca = new IrAlloca(valueType, value);
+                this.irInstructions.add(irAlloca);
+                /*---赋值前先获取全部初始值---*/
+                ArrayList<Integer> initVal = new ArrayList<>();
+                if (varDef.getInitVal() != null) {
+                    for (InitVal initVal1 : varDef.getInitVal().getInitVals()) {
+                        initVal.add(initVal1.calculate(symbolTable));
+                    }
+                }
+                /*---获取数组地址，赋值---*/
+                for (int i = 0; i < eleNum && i < initVal.size(); i++) {
+                    String name1 = "%" + this.nameCnt.getCnt();
+                    IrGetElementPtr getElementPtr = new IrGetElementPtr
+                            (valueType, name1, valueType, value, new IrIntType(32), new IrValue(String.valueOf(i)), false);
+                    this.irInstructions.add(getElementPtr);
+                    IrStore irStore = new IrStore(getElementPtr,
+                            new IrValue(String.valueOf(initVal.get(i)), new IrIntType(32)));
+                    this.irInstructions.add(irStore);
+
+                }
+                /*---填入符号表---*/
+                Symbol symbol = new SymbolVar(varDef.getIdent().getVal(), varDef.getDimension(), value);
+                this.symbolTable.addSymbol(symbol);
+            }
             else {
-                //todo
+                /*---定义类型和值，并分配内存---*/
+                int eleNum1 = varDef.getConstExps().get(0).calculate(symbolTable);
+                int eleNum2 = varDef.getConstExps().get(1).calculate(symbolTable);
+                IrValueType valueType = new IrArrayType(new IrIntType(32), eleNum1, eleNum2);
+                IrValue value = new IrValue(name, valueType);
+                IrAlloca irAlloca = new IrAlloca(valueType, value);
+                this.irInstructions.add(irAlloca);
+                /*---赋值前先获取全部初始值---*/
+                ArrayList<ArrayList<Integer>> initVal = new ArrayList<>();
+                if (varDef.getInitVal() != null) {
+                    for (InitVal initVal1 : varDef.getInitVal().getInitVals()) {
+                        ArrayList<Integer> initVal_ = new ArrayList<>();
+                        for (InitVal initVal2 : initVal1.getInitVals()) {
+                            initVal_.add(initVal2.calculate(symbolTable));
+                        }
+                        initVal.add(initVal_);
+                    }
+                }
+                /*---获取数组地址，赋值---*/
+                for (int i = 0; i < eleNum1 && i < initVal.size(); i++) {
+                    for (int j = 0; j < eleNum2 && j < initVal.get(i).size(); j++) {
+                        String name1 = "%" + this.nameCnt.getCnt();
+                        IrGetElementPtr getElementPtr = new IrGetElementPtr
+                                (valueType, name1, valueType, value, new IrIntType(32),
+                                        new IrValue(String.valueOf(i)), new IrValue(String.valueOf(j)), false);
+                        this.irInstructions.add(getElementPtr);
+                        IrStore irStore = new IrStore(getElementPtr,
+                                new IrValue(String.valueOf(initVal.get(i).get(j)), new IrIntType(32)));
+                        this.irInstructions.add(irStore);
+                    }
+                }
+                /*---填入符号表---*/
+                Symbol symbol = new SymbolVar(varDef.getIdent().getVal(), varDef.getDimension(), value);
+                this.symbolTable.addSymbol(symbol);
             }
         }
     }
@@ -203,26 +261,100 @@ public class IrInstructionBuilder {
 
     public IrValue genLVal(LVal lVal, boolean isLeftOp) {
         IrValue value = null;
+        // todo a[2][3] 但是引用a[1]
+        Symbol symbol = symbolTable.getSymbol(lVal.getIdent().getVal());
+        IrValue value_ = symbol.getValue();
+        IrValueType type = value_.getValueType();
         if (lVal.getExps().size() == 0) {
-            Symbol symbol = symbolTable.getSymbol(lVal.getIdent().getVal());
             if (isLeftOp) {
-                return symbol.getValue();
+                return value_;
             } else {
-                if (!symbol.getValue().getName().contains("@")
-                        && !symbol.getValue().getName().contains("%")) { //number
-                    return symbol.getValue();
-                } //todo param
+                if (!value_.getName().contains("@")
+                        && !value_.getName().contains("%")) { //number
+                    return value_;
+                }
                 else {
-                    IrValueType valueType = new IrIntType(32);
-                    IrLoad irLoad = new IrLoad(valueType, symbol.getValue());
+                    if (type instanceof IrArrayType) {
+                        type = new IrPointerType(((IrArrayType) type).getElementType());
+                    }
+                    IrLoad irLoad = new IrLoad(type, value_);
                     irLoad.setName("%" + nameCnt.getCnt());
                     this.irInstructions.add(irLoad);
                     return irLoad;
                 }
             }
         }
-        else {
-            //todo
+        else if (lVal.getExps().size() == 1) {
+            IrValue value1 = genExp(lVal.getExps().get(0)); // 存储lVal的index对应的IrValue
+            IrGetElementPtr getElementPtr;
+            if (type instanceof IrArrayType) { //todo 类型？或许可以统一吗？
+                String name = "%" + this.nameCnt.getCnt();
+                getElementPtr = new IrGetElementPtr(((IrArrayType) type).getElementType(), name,
+                        type, value_, new IrIntType(32), value1, false);
+            }
+            else {
+                // 先load降维
+                IrLoad irLoad = new IrLoad(type, value_);
+                irLoad.setName("%" + this.nameCnt.getCnt());
+                this.irInstructions.add(irLoad);
+                String name = "%" + this.nameCnt.getCnt();
+                getElementPtr = new IrGetElementPtr(((IrPointerType)type).getInnerType(), name,
+                        irLoad.getValueType(), irLoad, new IrIntType(32), value1, true);
+            }
+            this.irInstructions.add(getElementPtr);
+            if (isLeftOp) {
+                return getElementPtr;
+            }
+            else {
+                IrValueType valueType = getElementPtr.getValueType();
+                if (valueType instanceof IrArrayType) {
+                    valueType = new IrPointerType(((IrArrayType) valueType).getElementType());
+                }
+                IrLoad irLoad = new IrLoad(valueType, getElementPtr);
+                irLoad.setName("%" + nameCnt.getCnt());
+                this.irInstructions.add(irLoad); //todo 需要load吗？
+                return irLoad;
+            }
+        }
+        else if (lVal.getExps().size() == 2) {
+            IrValue value1 = genExp(lVal.getExps().get(0)); //[]中的
+            IrValue value2 = genExp(lVal.getExps().get(1));
+            IrGetElementPtr getElementPtr;
+            if (value_.getValueType() instanceof IrArrayType) { //todo 类型？或许可以统一吗？
+                String name = "%" + this.nameCnt.getCnt(); // 获取元素指针存到此处
+                getElementPtr = new IrGetElementPtr
+                        (((IrArrayType) value_.getValueType()).getElementType(), name, value_.getValueType(), value_
+                                , new IrIntType(32), value1, value2, false);
+            }
+            else {
+                // 先load降维
+                IrLoad irLoad = new IrLoad(value_.getValueType(), value_);
+                irLoad.setName("%" + this.nameCnt.getCnt());
+                this.irInstructions.add(irLoad);
+                String name = "%" + this.nameCnt.getCnt(); // 获取元素指针存到此处
+                getElementPtr = new IrGetElementPtr
+                        (((IrPointerType)value_.getValueType()).getInnerType(), name, value_.getValueType(), value_,
+                                new IrIntType(32), value1,true);
+                this.irInstructions.add(getElementPtr);
+                getElementPtr = new IrGetElementPtr
+                        (((IrPointerType)value_.getValueType()).getInnerType(), "%" + this.nameCnt.getCnt(),
+                                value_.getValueType(), getElementPtr, new IrIntType(32),
+                                new IrValue("0"), value2,true);
+            }
+            this.irInstructions.add(getElementPtr);
+            if (isLeftOp) {
+                return getElementPtr;
+            }
+            else {
+                IrValueType valueType = getElementPtr.getValueType();
+                if (valueType instanceof IrArrayType) {
+                    valueType = new IrPointerType(((IrArrayType) valueType).getElementType());
+                }
+                IrLoad irLoad = new IrLoad(valueType, getElementPtr);
+                irLoad.setName("%" + nameCnt.getCnt());
+                this.irInstructions.add(irLoad); //todo 需要load吗？
+                return irLoad;
+            }
         }
         return value;
     }
@@ -280,7 +412,7 @@ public class IrInstructionBuilder {
                 irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.sdiv, op1, op2);
             }
             else if (signs.get(i).getLexType() == LexType.MOD) {
-                irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.mod, op1, op2);
+                irBinaryInst = new IrBinaryInst(name, valueType, IrBinaryType.srem, op1, op2);
             }
             this.irInstructions.add(irBinaryInst);
             op1 = irBinaryInst;
