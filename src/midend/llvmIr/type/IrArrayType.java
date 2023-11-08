@@ -28,6 +28,18 @@ public class IrArrayType extends IrValueType {
         return dim;
     }
 
+    public int getElementNum() {
+        return elementNum;
+    }
+
+    public int getElementNum1() {
+        return elementNum1;
+    }
+
+    public int getElementNum2() {
+        return elementNum2;
+    }
+
     @Override
     public String toString() {
         if (this.dim == 1) {

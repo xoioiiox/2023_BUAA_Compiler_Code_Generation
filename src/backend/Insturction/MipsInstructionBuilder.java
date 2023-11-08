@@ -3,12 +3,17 @@ package backend.Insturction;
 import backend.MipsReg;
 import backend.MipsSymbolTable;
 import midend.llvmIr.IrValue;
-import midend.llvmIr.type.IrFunctionType;
+import midend.llvmIr.type.*;
 import midend.llvmIr.value.function.IrFunction;
 import midend.llvmIr.value.instruction.IrInstruction;
 import midend.llvmIr.value.instruction.binary.IrBinaryInst;
 import midend.llvmIr.value.instruction.binary.IrBinaryType;
+import midend.llvmIr.value.instruction.cond.IrBr;
+import midend.llvmIr.value.instruction.cond.IrIcmp;
+import midend.llvmIr.value.instruction.cond.IrIcmpType;
+import midend.llvmIr.value.instruction.cond.IrZext;
 import midend.llvmIr.value.instruction.memory.IrAlloca;
+import midend.llvmIr.value.instruction.memory.IrGetElementPtr;
 import midend.llvmIr.value.instruction.memory.IrLoad;
 import midend.llvmIr.value.instruction.memory.IrStore;
 import midend.llvmIr.value.instruction.terminator.IrCall;
@@ -37,25 +42,181 @@ public class MipsInstructionBuilder {
         else if (instruction instanceof IrBinaryInst) {
             genMipsBinaryInst();
         }
+        else if (instruction instanceof IrBr) {
+            genMipsBr();
+        }
         else if (instruction instanceof IrCall) {
             genMipsCall();
         }
-        else if (instruction instanceof IrRet) {
-            genMipsRet();
+        else if (instruction instanceof IrGetElementPtr) {
+            genMipsGetElementPtr();
+        }
+        else if (instruction instanceof IrIcmp) {
+            genMipsIcmp();
         }
         else if (instruction instanceof IrLoad) {
             genMipsLoad();
         }
+        else if (instruction instanceof IrRet) {
+            genMipsRet();
+        }
         else if (instruction instanceof IrStore) {
             genMipsStore();
+        }
+        else if (instruction instanceof IrZext) {
+            //genMipsZext();
         }
         return this.mipsInstructions;
     }
 
+    //%19 = icmp ne i32 0, %18
+    public void genMipsIcmp() {
+        IrIcmp icmp = (IrIcmp) this.instruction;
+        IrValue value1 = icmp.getOperand(0);
+        IrValue value2 = icmp.getOperand(1);
+        if (isConst(value1.getName())) {
+            Li li = new Li(new MipsReg(8), Integer.parseInt(value1.getName()));
+            this.mipsInstructions.add(li);
+        }
+        else {
+            int offset1 = this.symbolTable.getOffset(value1.getName());
+            Lw lw = new Lw(new MipsReg(8), new MipsReg(30), offset1);
+            this.mipsInstructions.add(lw);
+        }
+        if (isConst(value2.getName())) {
+            Li li = new Li(new MipsReg(9), Integer.parseInt(value2.getName()));
+            this.mipsInstructions.add(li);
+        }
+        else {
+            int offset2 = this.symbolTable.getOffset(value2.getName());
+            Lw lw = new Lw(new MipsReg(9), new MipsReg(30), offset2);
+            this.mipsInstructions.add(lw);
+        }
+        SCmpType type = getType(icmp.getType());
+        SCmp sCmp = new SCmp(type, new MipsReg(10), new MipsReg(8), new MipsReg(9));
+        this.mipsInstructions.add(sCmp);
+        int offset = this.symbolTable.getOffset(null);
+        Sw sw = new Sw(new MipsReg(10), new MipsReg(30), offset);
+        this.mipsInstructions.add(sw);
+        this.symbolTable.getSymbolMap().put(icmp.getName(), offset);
+    }
+
+    public SCmpType getType(IrIcmpType irIcmpType) {
+        SCmpType type = null;
+        switch (irIcmpType) {
+            case eq: type = SCmpType.seq; break;
+            case ne: type = SCmpType.sne; break;
+            case sge: type = SCmpType.sge; break;
+            case sgt: type = SCmpType.sgt; break;
+            case sle: type = SCmpType.sle; break;
+            case slt: type = SCmpType.slt; break;
+        }
+        return type;
+    }
+
+    // b[][] 加载b[] todo
+    public void genMipsGetElementPtr() {
+        IrGetElementPtr getElementPtr = (IrGetElementPtr) this.instruction;
+        String name = getElementPtr.getPtrVal().getName();
+        /*------先获取数组首地址------*/
+        if (isGlobal(name)) { //全局数组
+            La la = new La(new MipsReg(8), name.substring(1));
+            this.mipsInstructions.add(la);
+        }
+        else if (getElementPtr.isFParam() || getElementPtr.getPtrVal().getValueType() instanceof IrPointerType) { //形参
+            int offset = symbolTable.getOffset(name);
+            Lw lw = new Lw(new MipsReg(8), new MipsReg(30), offset);
+            this.mipsInstructions.add(lw);
+        }
+        else { //局部数组 todo 出错！
+            int offset = symbolTable.getOffset(name);
+            Addi addi = new Addi(new MipsReg(8), new MipsReg(30), offset);
+            this.mipsInstructions.add(addi);
+        }
+        /*------再计算总偏移量------*/
+        if (getElementPtr.getIndex() != null) { //一维a[]->a 或二维b[][]->b[1]
+            IrValue value = getElementPtr.getIndex();
+            getIndex(value, new MipsReg(9)); // 存了index的寄存器
+            IrValueType valueType = getElementPtr.getBaseType();
+            IrValueType valueType1 = null;
+            if (valueType instanceof IrArrayType) {
+                valueType1 = ((IrArrayType) valueType).getElementType();
+            }
+            else if (valueType instanceof IrPointerType) {
+                valueType1 = ((IrPointerType) valueType).getInnerType();
+            }
+            if (valueType1 instanceof IrArrayType) {
+                int elementNum = ((IrArrayType) valueType1).getElementNum();
+                Li li = new Li(new MipsReg(10), elementNum);
+                this.mipsInstructions.add(li);
+                Binary binary = new Binary(BinaryType.mul, new MipsReg(9), new MipsReg(9), new MipsReg(10));
+                this.mipsInstructions.add(binary);
+            }
+        } else { //一定是二维
+            int elementNum2 = 0;
+            if (getElementPtr.getBaseType() instanceof IrArrayType) {
+                IrArrayType irArrayType = (IrArrayType) getElementPtr.getBaseType();
+                elementNum2 = irArrayType.getElementNum2();
+            }
+            else if (getElementPtr.getBaseType() instanceof IrPointerType) {
+                IrPointerType irPointerType = (IrPointerType) getElementPtr.getBaseType();
+                elementNum2 = ((IrArrayType)irPointerType.getInnerType()).getElementNum();
+            }
+            IrValue value1 = getElementPtr.getIndex1();
+            IrValue value2 = getElementPtr.getIndex2();
+            getIndex(value1, new MipsReg(9));
+            getIndex(value2, new MipsReg(10));
+            Li li = new Li(new MipsReg(11), elementNum2);
+            this.mipsInstructions.add(li);
+            Binary binary = new Binary(BinaryType.mul, new MipsReg(12), new MipsReg(9), new MipsReg(11));
+            this.mipsInstructions.add(binary);
+            Binary binary1 = new Binary(BinaryType.add, new MipsReg(9), new MipsReg(12), new MipsReg(10));
+            this.mipsInstructions.add(binary1);
+        }
+        /*------计算绝对位置------*/
+        Sll sll = new Sll(new MipsReg(9), new MipsReg(9), 2);
+        this.mipsInstructions.add(sll);
+        Binary binary = new Binary(BinaryType.add, new MipsReg(10), new MipsReg(8), new MipsReg(9));
+        this.mipsInstructions.add(binary);
+        int offset = this.symbolTable.getOffset(null);
+        Sw sw = new Sw(new MipsReg(10), new MipsReg(30), offset);
+        this.mipsInstructions.add(sw);
+        //Lw lw = new Lw(new MipsReg(11), new MipsReg(10), 0);
+        //this.mipsInstructions.add(lw);
+        //Sw sw = new Sw(new MipsReg(11), new MipsReg(30), offset);
+        //this.mipsInstructions.add(sw);
+        symbolTable.getSymbolMap().put(getElementPtr.getName(), offset);
+        symbolTable.addSpecialBase(getElementPtr.getName());
+    }
+
+    private void getIndex(IrValue value, MipsReg desReg) {
+        if (isConst(value.getName())) {
+            Li li = new Li(desReg, Integer.parseInt(value.getName()));
+            this.mipsInstructions.add(li);
+        }
+        else {
+            Lw lw = new Lw(desReg, new MipsReg(30),
+                    symbolTable.getOffset(value.getName()));
+            this.mipsInstructions.add(lw);
+        }
+    }
+
     public void genMipsAlloca() {
         IrAlloca irAlloca = (IrAlloca) this.instruction;
+        IrValueType valueType = irAlloca.getValueType();
+        int num = 0;
+        if (valueType instanceof IrArrayType) {
+            int dim = ((IrArrayType) valueType).getDim();
+            if (dim == 1) {
+                num = ((IrArrayType) valueType).getElementNum();
+            }
+            else if (dim == 2) {
+                num = ((IrArrayType) valueType).getElementNum1() * ((IrArrayType) valueType).getElementNum2();
+            }
+        }
         // 加入符号表， 栈指针移动
         this.symbolTable.getSymbolMap().put(irAlloca.getValue().getName(), this.symbolTable.getOffset(null));
+        this.symbolTable.changeOffset(4 * num);
     }
 
     public void genMipsBinaryInst() {
@@ -120,6 +281,27 @@ public class MipsInstructionBuilder {
             //todo
         }
         return binaryType;
+    }
+
+    //br i1 %16, label %20, label %17
+    public void genMipsBr() {
+        IrBr irBr = (IrBr) this.instruction;
+        IrValue value = irBr.getCond();
+        if (value != null) {
+            int offset = this.symbolTable.getOffset(value.getName());
+            Lw lw = new Lw(new MipsReg(8), new MipsReg(30), offset);
+            this.mipsInstructions.add(lw);
+            String trueLabel = irBr.getTrueLabel();
+            String falseLabel = irBr.getFalseLabel();
+            Beq beq = new Beq(new MipsReg(8), 1, trueLabel);
+            this.mipsInstructions.add(beq);
+            J j = new J(falseLabel);
+            this.mipsInstructions.add(j);
+        }
+        else {
+            J j = new J(irBr.getLabel());
+            this.mipsInstructions.add(j);
+        }
     }
 
     public void genMipsCall() {
@@ -259,21 +441,50 @@ public class MipsInstructionBuilder {
         IrLoad irLoad = (IrLoad) this.instruction;
         String srcName = irLoad.getValue().getName();
         int offset_r = this.symbolTable.getOffset(srcName);
-        if (!isGlobal(srcName)) {
-            // 在符号表中检索，找到存储的位置
-            Lw lw = new Lw(new MipsReg(8), new MipsReg(30), offset_r);
+        /*if (symbolTable.getSpecialBase().contains(srcName) && irLoad.getValue().getValueType() instanceof IrIntType) { //地址值 在getElementPtr之后
+            Lw lw = new Lw(new MipsReg(9), new MipsReg(30), offset_r);
+            this.mipsInstructions.add(lw);
+            lw = new Lw(new MipsReg(8), new MipsReg(9), 0);
             this.mipsInstructions.add(lw);
         }
-        else { // 全局变量
-            Lw lw = new Lw(new MipsReg(8), new MipsReg(28), offset_r);
+        if (irLoad.getValue().getValueType() instanceof IrArrayType) { //获取数组基地址
+            if (isGlobal(srcName)) {
+                La la = new La(new MipsReg(8), srcName.substring(1));
+                this.mipsInstructions.add(la);
+            }
+            else {
+                Addi addi = new Addi(new MipsReg(8), new MipsReg(30), offset_r);
+                this.mipsInstructions.add(addi);
+            }
+        }*/
+        if (symbolTable.getSpecialBase().contains(srcName) && irLoad.getValue().getValueType() instanceof IrIntType) {
+            Lw lw = new Lw(new MipsReg(9), new MipsReg(30), offset_r);
             this.mipsInstructions.add(lw);
+            lw = new Lw(new MipsReg(8), new MipsReg(9), 0);
+            this.mipsInstructions.add(lw);
+        }
+        else  {
+            if (!isGlobal(srcName)) {
+                // 在符号表中检索，找到存储的位置
+                Lw lw = new Lw(new MipsReg(8), new MipsReg(30), offset_r);
+                this.mipsInstructions.add(lw);
+            }
+            else { // 全局变量
+                if (irLoad.getValue().getValueType() instanceof IrIntType) {
+                    Lw lw = new Lw(new MipsReg(8), irLoad.getValue().getName().substring(1));
+                    this.mipsInstructions.add(lw);
+                }
+                else {
+                    La la = new La(new MipsReg(8), irLoad.getValue().getName().substring(1));
+                    this.mipsInstructions.add(la);
+                }
+            }
         }
         //新建符号（对应左值），存入取得值
         int offset_l = this.symbolTable.getOffset(null);
         this.symbolTable.getSymbolMap().put(irLoad.getName(), offset_l);
         Sw sw = new Sw(new MipsReg(8), new MipsReg(30), offset_l);
         this.mipsInstructions.add(sw);
-
     }
 
     // int a = 1, a = getint(), a = 1;
@@ -296,12 +507,19 @@ public class MipsInstructionBuilder {
             this.mipsInstructions.add(lw);
         }
         //todo 约定上述三种情况均把计算结果取出放在$t0
-        if (isGlobal(irStore.getLeftOp().getName())) {
-            Sw sw = new Sw(new MipsReg(8), new MipsReg(28), offset_l);
-            this.mipsInstructions.add(sw);
+        if (!symbolTable.getSpecialBase().contains(irStore.getLeftOp().getName())) {
+            if (isGlobal(irStore.getLeftOp().getName())) {
+                Sw sw = new Sw(new MipsReg(8), irStore.getLeftOp().getName().substring(1));
+                this.mipsInstructions.add(sw);
+            } else {
+                Sw sw = new Sw(new MipsReg(8), new MipsReg(30), offset_l);
+                this.mipsInstructions.add(sw);
+            }
         }
         else {
-            Sw sw = new Sw(new MipsReg(8), new MipsReg(30), offset_l);
+            Lw lw = new Lw(new MipsReg(9), new MipsReg(30), offset_l);
+            this.mipsInstructions.add(lw);
+            Sw sw = new Sw(new MipsReg(8), new MipsReg(9), 0);
             this.mipsInstructions.add(sw);
         }
     }

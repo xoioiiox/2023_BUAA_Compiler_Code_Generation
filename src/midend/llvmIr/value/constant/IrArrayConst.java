@@ -13,6 +13,10 @@ public class IrArrayConst extends IrConstant{
         this.val = val;
     }
 
+    public ArrayList<IrConstant> getVal() {
+        return val;
+    }
+
     //@c = dso_local global
     // [5 x [5 x i32]]
     // [[5 x i32] [i32 1, i32 2, i32 3, i32 0, i32 0],

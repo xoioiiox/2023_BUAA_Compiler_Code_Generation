@@ -4,17 +4,17 @@ import midend.llvmIr.IrValue;
 import midend.llvmIr.type.IrValueType;
 
 public class IrGlobalVariable extends IrValue {
-    private IrValue irConstant;
+    private IrValue value;
     private boolean isConst;
 
-    public IrGlobalVariable(String name, IrValue irConstant, boolean isConst, IrValueType type) {
+    public IrGlobalVariable(String name, IrValue value, boolean isConst, IrValueType type) {
         super(name, type);
-        this.irConstant = irConstant;
+        this.value = value;
         this.isConst = isConst;
     }
 
-    public IrValue getIrConstant() {
-        return irConstant;
+    public IrValue getValue() {
+        return value;
     }
 
     /**
@@ -26,6 +26,6 @@ public class IrGlobalVariable extends IrValue {
         return this.getName() + " = dso_local "
                 + ((isConst)? "constant": "global") + " "
                 //+ this.getValueType().toString() + " "
-                + this.irConstant.toString();
+                + this.value.toString();
     }
 }

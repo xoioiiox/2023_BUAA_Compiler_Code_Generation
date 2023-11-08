@@ -15,6 +15,10 @@ public class IrIcmp extends IrInstruction {
         this.type = type;
     }
 
+    public IrIcmpType getType() {
+        return type;
+    }
+
     @Override
     public String toString() {
         return this.getName() + " = icmp "

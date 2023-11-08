@@ -6,6 +6,7 @@ import backend.Insturction.Li;
 import backend.Insturction.MipsInstruction;
 import backend.Insturction.Sw;
 import midend.llvmIr.IrModule;
+import midend.llvmIr.type.IrIntType;
 import midend.llvmIr.value.constant.IrIntConst;
 import midend.llvmIr.value.function.IrFunction;
 import midend.llvmIr.value.globalVariable.IrGlobalVariable;
@@ -29,13 +30,12 @@ public class MipsBuilder {
     }
 
     public MipsModule genMipsModule() {
-        int cnt = 0;
+        int cnt = 0; //计算offset
         //todo symbol table
         //global variable -> .data
         for (IrGlobalVariable globalVariable : this.irModule.getIrGlobalVariables()) {
             MipsGlobalVariable mipsGlobalVariable =
                     new MipsGlobalVariable(globalVariable.getName().substring(1), globalVariable);
-            genMipsGlobalVariable(mipsGlobalVariable, cnt);
             this.mipsGlobalVariables.add(mipsGlobalVariable);
             cnt++;
         }
@@ -46,14 +46,6 @@ public class MipsBuilder {
             this.mipsFunctions.add(mipsFunctionBuilder.genMipsFunction());
         }
         return new MipsModule(mipsGlobalVariables, mipsInstructions, mipsFunctions);
-    }
-
-    public void genMipsGlobalVariable(MipsGlobalVariable mipsGlobalVariable, int cnt) {
-        this.symbolTable.getSymbolMap().put("@" +mipsGlobalVariable.getName(), cnt * 4);
-        Li li = new Li(new MipsReg(8), ((IrIntConst)mipsGlobalVariable.getGlobalVariable().getIrConstant()).getVal());
-        Sw sw = new Sw(new MipsReg(8), new MipsReg(28), cnt * 4);
-        this.mipsInstructions.add(li);
-        this.mipsInstructions.add(sw);
     }
 
 }

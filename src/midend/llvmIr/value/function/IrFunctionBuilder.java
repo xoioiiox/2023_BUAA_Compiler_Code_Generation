@@ -9,6 +9,7 @@ import midend.llvmIr.value.basicBlock.IrBasicBlockBuilder;
 import midend.llvmIr.value.instruction.IrInstruction;
 import midend.llvmIr.value.instruction.memory.IrAlloca;
 import midend.llvmIr.value.instruction.memory.IrStore;
+import midend.llvmIr.value.instruction.terminator.IrRet;
 import midend.symbol.Symbol;
 import midend.symbol.SymbolFunc;
 import midend.symbol.SymbolTable;
@@ -66,7 +67,7 @@ public class IrFunctionBuilder {
         }
         IrFunctionType functionType = new IrFunctionType(retType, paramTypes, names);
         /*------加入参数Load语句------*/
-        ArrayList<IrInstruction> paramInst = new ArrayList<>();
+        /*ArrayList<IrInstruction> paramInst = new ArrayList<>();
         for (int i = 0; i < paramTypes.size(); i++) {
             IrValue irValue = new IrValue("%" + this.nameCnt.getCnt(), paramTypes.get(i));
             IrAlloca irAlloca = new IrAlloca(paramTypes.get(i), irValue);
@@ -75,18 +76,25 @@ public class IrFunctionBuilder {
             paramInst.add(irStore);
             Symbol symbol = symbolTable.getSymbol(symNames.get(i));
             symbol.setValue(irAlloca);
-        }
+        }*/
         /*------防止递归调用，需要先将函数符号加入符号表再进行block解析------*/
         SymbolFunc symbolFunc = new SymbolFunc(funcDef.getIdent().getVal(), 0, funcDef.getFuncType().getType());
         this.symbolTable.addSymbol(symbolFunc);
         ArrayList<IrBasicBlock> basicBlocks = new ArrayList<>();
         IrFunction function = new IrFunction("@" + this.funcDef.getIdent().getVal(),
-                functionType, this.funcDef.isMainFunc(), basicBlocks, paramInst);
+                functionType, this.funcDef.isMainFunc(), basicBlocks);//, paramInst);
         symbolFunc.setValue(function);
         /*------function block------*/
         IrBasicBlockBuilder basicBlockBuilder
                 = new IrBasicBlockBuilder(funcDef.getIdent().getVal(), symbolTable, funcDef.getBlock(), nameCnt);
-        function.setBasicBlocks(basicBlockBuilder.genIrBasicBlock());
+        ArrayList<IrBasicBlock> blocks = basicBlockBuilder.genIrBasicBlock();
+        function.setBasicBlocks(blocks);
+        IrBasicBlock lastBlock = blocks.get(blocks.size() - 1);
+        IrInstruction instruction = lastBlock.getInstructions().get(lastBlock.getInstructions().size() - 1);
+        if (!(instruction instanceof IrRet)) {
+            IrRet irRet = new IrRet(new IrVoidType(), false);
+            lastBlock.addInstruction(irRet);
+        }
         return function;
     }
 

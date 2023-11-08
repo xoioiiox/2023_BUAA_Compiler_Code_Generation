@@ -22,6 +22,22 @@ public class IrBr extends IrInstruction {
         this.label = label;
     }
 
+    public IrValue getCond() {
+        return cond;
+    }
+
+    public String getTrueLabel() {
+        return trueLabel;
+    }
+
+    public String getFalseLabel() {
+        return falseLabel;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
     public void setFalseLabel(String falseLabel) {
         this.falseLabel = falseLabel;
     }

@@ -40,6 +40,30 @@ public class IrGetElementPtr extends IrInstruction {
         this.isFParam = isFParam;
     }
 
+    public IrValueType getBaseType() {
+        return baseType;
+    }
+
+    public IrValue getPtrVal() {
+        return ptrVal;
+    }
+
+    public boolean isFParam() {
+        return isFParam;
+    }
+
+    public IrValue getIndex() {
+        return index;
+    }
+
+    public IrValue getIndex1() {
+        return index1;
+    }
+
+    public IrValue getIndex2() {
+        return index2;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

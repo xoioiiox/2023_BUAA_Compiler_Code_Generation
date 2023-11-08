@@ -16,8 +16,8 @@ public class MipsBasicBlock {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        //sb.append(this.blockName);
-        //sb.append(":\n");
+        sb.append(this.blockName);
+        sb.append(":\n");
         for (MipsInstruction instruction : instructions) {
             sb.append(instruction.toString());
             sb.append("\n");

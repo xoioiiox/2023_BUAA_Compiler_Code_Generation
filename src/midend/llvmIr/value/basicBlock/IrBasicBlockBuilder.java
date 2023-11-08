@@ -73,7 +73,7 @@ public class IrBasicBlockBuilder {
             }
             //普通语句
             else {
-                IrBasicBlock basicBlock = new IrBasicBlock(String.valueOf(this.nameCnt.getCnt()));
+                IrBasicBlock basicBlock = new IrBasicBlock(funcName + this.nameCnt.getCnt());
                 for (; i < block.getBlockItems().size(); i++) {
                     BlockItem blockItem1 = block.getBlockItems().get(i);
                     Stmt stmt1 = blockItem1.getStmt();
@@ -94,17 +94,23 @@ public class IrBasicBlockBuilder {
     }
 
     public void genIrStmtFor(StmtFor stmtFor) {
-        // 处理for头-执行forStmt1初始化语句
-        IrBasicBlock curBasicBlock = this.basicBlocks.get(this.basicBlocks.size() - 1); //当前基本块
+        // 处理for头-执行forStmt1初始化语句 todo 可能有空缺
         ForStmt forStmt1 = stmtFor.getForStmt1();
-        StmtAssign stmtAssign1 = new StmtAssign(forStmt1.getlVal(), forStmt1.getExp());
-        BlockItem blockItem = new BlockItem(stmtAssign1);
-        IrInstructionBuilder instructionBuilder
-                = new IrInstructionBuilder(this.symbolTable, blockItem, this.nameCnt);
-        curBasicBlock.getInstructions().addAll(instructionBuilder.genIrInstruction());
+        if (forStmt1 != null) {
+            IrBasicBlock curBasicBlock = this.basicBlocks.get(this.basicBlocks.size() - 1); //当前基本块
+            StmtAssign stmtAssign1 = new StmtAssign(forStmt1.getlVal(), forStmt1.getExp());
+            BlockItem blockItem = new BlockItem(stmtAssign1);
+            IrInstructionBuilder instructionBuilder
+                    = new IrInstructionBuilder(this.symbolTable, blockItem, this.nameCnt);
+            curBasicBlock.getInstructions().addAll(instructionBuilder.genIrInstruction());
+        }
         // 处理cond
         String condLabel = String.valueOf(this.nameCnt.getCntOnly());
-        ArrayList<ArrayList<IrBasicBlock>> blocks = genCond(stmtFor.getCond());
+        ArrayList<ArrayList<IrBasicBlock>> blocks = new ArrayList<>();
+        Cond cond = stmtFor.getCond();
+        if (cond != null) {
+            blocks = genCond(cond);
+        }
         //gen for主体stmt
         ArrayList<BlockItem> blockItems = new ArrayList<>();
         blockItems.add(new BlockItem(stmtFor.getStmt()));
@@ -116,30 +122,36 @@ public class IrBasicBlockBuilder {
         ArrayList<IrBr> continues = irBasicBlockBuilder.getContinues();
         // forStmt2增量语句
         String forStmt2Begin = String.valueOf(this.nameCnt.getCntOnly());
-        IrBasicBlock forStmt2Block = new IrBasicBlock(String.valueOf(this.nameCnt.getCnt()));
+        IrBasicBlock forStmt2Block = new IrBasicBlock(funcName + this.nameCnt.getCnt());
         this.basicBlocks.add(forStmt2Block);
         ForStmt forStmt2 = stmtFor.getForStmt2();
-        StmtAssign stmtAssign2 = new StmtAssign(forStmt2.getlVal(), forStmt2.getExp());
-        blockItem = new BlockItem(stmtAssign2);
-        instructionBuilder
-                = new IrInstructionBuilder(this.symbolTable, blockItem, this.nameCnt);
-        forStmt2Block.getInstructions().addAll(instructionBuilder.genIrInstruction());
+        if (forStmt2 != null) {
+            StmtAssign stmtAssign2 = new StmtAssign(forStmt2.getlVal(), forStmt2.getExp());
+            BlockItem blockItem = new BlockItem(stmtAssign2);
+            IrInstructionBuilder instructionBuilder
+                    = new IrInstructionBuilder(this.symbolTable, blockItem, this.nameCnt);
+            forStmt2Block.getInstructions().addAll(instructionBuilder.genIrInstruction());
+        }
         // 末尾追加跳转到For头语句
-        IrBr brIfEnd = new IrBr(condLabel);
+        IrBr brIfEnd = new IrBr(funcName + condLabel);
         forStmt2Block.addInstruction(brIfEnd);
         String forEndLabel = String.valueOf(this.nameCnt.getCntOnly());
-        // 对于整个cond的最后一条语句，若不为真，则要跳转到for语句后接的基本块
-        ArrayList<IrBasicBlock> basicBlocks1 = blocks.get(blocks.size() - 1);
-        IrBasicBlock basicBlock1 = basicBlocks1.get(basicBlocks1.size() - 1);
-        IrInstruction instruction = basicBlock1.getInstructions().get(basicBlock1.getInstructions().size() - 1);
-        IrBr irBr = (IrBr) instruction;
-        irBr.setFalseLabel(forEndLabel);
+        if (cond != null) {
+            // 对于整个cond的最后一条语句，若不为真，则要跳转到for语句后接的基本块
+            ArrayList<IrBasicBlock> basicBlocks1 = blocks.get(blocks.size() - 1);
+            IrBasicBlock basicBlock1 = basicBlocks1.get(basicBlocks1.size() - 1);
+            IrInstruction instruction = basicBlock1.getInstructions().get(basicBlock1.getInstructions().size() - 1);
+            IrBr irBr = (IrBr) instruction;
+            irBr.setFalseLabel(funcName + forEndLabel);
+        }
         for (IrBr breakBr : breaks) {
-            breakBr.setLabel(forEndLabel);
+            breakBr.setLabel(funcName + forEndLabel);
         }
         for (IrBr continueBr : continues) {
-            continueBr.setLabel(forStmt2Begin);
+            continueBr.setLabel(funcName + forStmt2Begin);
         }
+        //IrBasicBlock irBasicBlock = new IrBasicBlock(funcName + this.nameCnt.getCnt());
+        //this.basicBlocks.add(irBasicBlock); //防止之后没有block了 todo
     }
 
     public void genIrStmtIf(StmtIf stmtIf) {
@@ -158,9 +170,12 @@ public class IrBasicBlockBuilder {
         this.basicBlocks.addAll(irBasicBlocks);
         this.breaks.addAll(irBasicBlockBuilder.getBreaks());
         this.continues.addAll(irBasicBlockBuilder.getContinues());
-        IrBasicBlock lastBlock = irBasicBlocks.get(irBasicBlocks.size() - 1);
-        IrBr brIfEnd = new IrBr("#");
-        lastBlock.addInstruction(brIfEnd);
+        IrBr brIfEnd = null;
+        if (irBasicBlocks.size() != 0) { //todo 需要else吗？
+            IrBasicBlock lastBlock = irBasicBlocks.get(irBasicBlocks.size() - 1);
+            brIfEnd = new IrBr("#");
+            lastBlock.addInstruction(brIfEnd);
+        }
         // 分析else-stmt
         int elseBeginLabel = this.nameCnt.getCntOnly();
         if (elseStmt != null) {
@@ -170,15 +185,19 @@ public class IrBasicBlockBuilder {
             IrBasicBlockBuilder irBasicBlockBuilder1 = new IrBasicBlockBuilder(this.funcName, this.symbolTable, block11, this.nameCnt);
             ArrayList<IrBasicBlock> irBasicBlocks1 = irBasicBlockBuilder1.genIrBasicBlock();
             this.basicBlocks.addAll(irBasicBlocks1);
+            this.breaks.addAll(irBasicBlockBuilder1.getBreaks());
+            this.continues.addAll(irBasicBlockBuilder1.getContinues());
         }
         // 对于整个cond的最后一条语句，若不为真，则要跳转到else
         ArrayList<IrBasicBlock> basicBlocks1 = blocks.get(blocks.size() - 1);
         IrBasicBlock basicBlock1 = basicBlocks1.get(basicBlocks1.size() - 1);
         IrInstruction instruction = basicBlock1.getInstructions().get(basicBlock1.getInstructions().size() - 1);
         IrBr irBr = (IrBr) instruction;
-        irBr.setFalseLabel(String.valueOf(elseBeginLabel));
+        irBr.setFalseLabel(funcName + elseBeginLabel);
         // 跳转到接下来的基本块
-        brIfEnd.setLabel(String.valueOf(this.nameCnt.getCntOnly()));
+        if (brIfEnd != null) {
+            brIfEnd.setLabel(funcName + this.nameCnt.getCntOnly());
+        }
     }
 
     public ArrayList<ArrayList<IrBasicBlock>> genCond(Cond cond) {
@@ -193,7 +212,7 @@ public class IrBasicBlockBuilder {
             // 对于或语句中每一个与语句的最后一条eq语句，若true则证明整个与语句为真，可直接跳转到stmt1（即或语句末尾
             IrBasicBlock basicBlock = blocks.get(blocks.size() - 1);
             IrBr irBr = (IrBr) basicBlock.getInstructions().get(basicBlock.getInstructions().size() - 1);
-            irBr.setTrueLabel(LorExpEnd);
+            irBr.setTrueLabel(funcName + LorExpEnd);
         }
         return lAndBlocks;
     }
@@ -209,14 +228,14 @@ public class IrBasicBlockBuilder {
         for (IrBasicBlock basicBlock : eqExpBlocks) {
             IrInstruction instruction = basicBlock.getInstructions().get(basicBlock.getInstructions().size() - 1); // 应该是br语句
             IrBr irBr = (IrBr) instruction;
-            irBr.setFalseLabel(lAndEnd);
+            irBr.setFalseLabel(funcName + lAndEnd);
         }
         return eqExpBlocks;
     }
 
     public IrBasicBlock genEqExp(EqExp eqExp) {
         // 生成基本块
-        IrBasicBlock curBasicBlock = new IrBasicBlock(String.valueOf(this.nameCnt.getCnt()));
+        IrBasicBlock curBasicBlock = new IrBasicBlock(funcName + this.nameCnt.getCnt());
         // 解析EqExp语句
         ArrayList<RelExp> relExps = eqExp.getRelExps();
         ArrayList<Token> signs = eqExp.getSigns();
@@ -226,7 +245,7 @@ public class IrBasicBlockBuilder {
             IrValue value = new IrValue("0");
             IrIcmp icmp = new IrIcmp(name, IrIcmpType.ne, new IrIntType(32), value, op1);
             curBasicBlock.addInstruction(icmp);
-            IrBr irBr = new IrBr(icmp, String.valueOf(this.nameCnt.getCntOnly()), "#");
+            IrBr irBr = new IrBr(icmp, funcName + this.nameCnt.getCntOnly(), "#");
             curBasicBlock.addInstruction(irBr);
             this.basicBlocks.add(curBasicBlock);
             return curBasicBlock;
@@ -247,7 +266,7 @@ public class IrBasicBlockBuilder {
         }
         // 生成Br语句，加入当前基本块
         // 正确则跳转下一与语句，否则跳到下一或语句
-        IrBr irBr = new IrBr(op1, String.valueOf(this.nameCnt.getCntOnly()), "#");
+        IrBr irBr = new IrBr(op1, funcName + this.nameCnt.getCntOnly(), "#");
         curBasicBlock.addInstruction(irBr);
         this.basicBlocks.add(curBasicBlock);
         return curBasicBlock;

@@ -11,15 +11,15 @@ import java.util.ArrayList;
 public class IrFunction extends IrValue {
     private boolean isMainFunc;
     private ArrayList<IrBasicBlock> basicBlocks;
-    private ArrayList<IrInstruction> paramInst;
+    //private ArrayList<IrInstruction> paramInst;
 
     public IrFunction(String name, IrValueType irValueType,
-                      boolean isMainFunc, ArrayList<IrBasicBlock> basicBlocks,
-                      ArrayList<IrInstruction> paramInst) {
+                      boolean isMainFunc, ArrayList<IrBasicBlock> basicBlocks){
+                      //ArrayList<IrInstruction> paramInst) {
         super(name, irValueType);
         this.isMainFunc = isMainFunc;
         this.basicBlocks = basicBlocks;
-        this.paramInst = paramInst;
+        //this.paramInst = paramInst;
     }
 
     public boolean isMainFunc() {
@@ -64,10 +64,10 @@ public class IrFunction extends IrValue {
         }
         sb.append(")");
         sb.append(" {");
-        for (IrInstruction instruction : paramInst) {
+        /*for (IrInstruction instruction : paramInst) {
             sb.append("\n");
             sb.append(instruction.toString());
-        }
+        }*/
         for (IrBasicBlock basicBlock : this.basicBlocks) {
             sb.append(basicBlock.toString());
         }
