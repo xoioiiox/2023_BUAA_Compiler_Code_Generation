@@ -1,14 +1,6 @@
 #----------全局变量区-----------
 .data
-glo_1: .word 0
-glo_2: .word 0
-glo_3: .word 0
-glo_4: .word 0
-glo_5: .word 0
-glo_6: .word 0
-glo_7: .word 0
-glo_8: .word 0
-glo_9: .word 0
+x: .word 0
 .text
 li $fp, 0x10040000
 #----------存储全局变量到内存-----------
@@ -18,217 +10,33 @@ j main
 
 #----------全局函数及主函数-----------
 #----------------函数入口-----------------
+func:
+func_1:
+lw $t0, 0($fp)
+sw $t0, 4($fp)
+lw $t0, 4($fp)
+sw $t0, x
+
+func_3:
+jr $ra
+
+
+#----------------函数入口-----------------
 main:
 main_0:
-li $v0, 5
-syscall
-sw $v0, 0($fp)
-lw $t0, 0($fp)
-sw $t0, glo_1
-li $v0, 5
-syscall
-sw $v0, 8($fp)
-lw $t0, 8($fp)
-sw $t0, glo_2
-li $v0, 5
-syscall
-sw $v0, 16($fp)
-lw $t0, 16($fp)
-sw $t0, glo_3
-li $v0, 5
-syscall
-sw $v0, 24($fp)
-lw $t0, 24($fp)
-sw $t0, glo_4
-li $v0, 5
-syscall
-sw $v0, 32($fp)
-lw $t0, 32($fp)
-sw $t0, glo_5
-li $v0, 5
-syscall
-sw $v0, 40($fp)
-lw $t0, 40($fp)
-sw $t0, glo_6
-li $v0, 5
-syscall
-sw $v0, 48($fp)
-lw $t0, 48($fp)
-sw $t0, glo_7
-li $v0, 5
-syscall
-sw $v0, 56($fp)
-lw $t0, 56($fp)
-sw $t0, glo_8
-li $v0, 5
-syscall
-sw $v0, 64($fp)
-lw $t0, 64($fp)
-sw $t0, glo_9
-
-main_10:
-lw $t0, glo_9
-sw $t0, 76($fp)
-lw $t0, 76($fp)
-li $t1, 0
-sge $t2, $t0, $t1
-sw $t2, 80($fp)
-lw $t0, 80($fp)
-beq $t0, 1, main_19
-j main_13
-
-main_13:
-lw $t0, glo_1
-sw $t0, 88($fp)
-lw $t0, 88($fp)
-li $t1, 0
-slt $t2, $t0, $t1
-sw $t2, 92($fp)
-lw $t0, 92($fp)
-beq $t0, 1, main_16
-j main_40
-
-main_16:
-lw $t0, glo_8
-sw $t0, 100($fp)
-li $t0, 0
-lw $t1, 100($fp)
-sle $t2, $t0, $t1
-sw $t2, 104($fp)
-lw $t0, 104($fp)
-beq $t0, 1, main_19
-j main_40
-
-main_19:
-lw $t0, glo_2
-sw $t0, 112($fp)
-lw $t0, 112($fp)
-li $t1, 1
-sgt $t2, $t0, $t1
-sw $t2, 116($fp)
-lw $t0, 116($fp)
-beq $t0, 1, main_22
-j main_27
-
-main_22:
-lw $t0, glo_2
-sw $t0, 124($fp)
-lw $t0, 124($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 128($fp)
-lw $t0, 128($fp)
-sw $t0, glo_2
-lw $t0, glo_9
-sw $t0, 140($fp)
-lw $t0, 140($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 144($fp)
-lw $t0, 144($fp)
-sw $t0, glo_9
-j main_39
-j main_39
-
-main_27:
-lw $t0, glo_2
-sw $t0, 156($fp)
-lw $t0, 156($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 160($fp)
-lw $t0, 160($fp)
-sw $t0, glo_2
-lw $t0, glo_1
-sw $t0, 172($fp)
-lw $t0, 172($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 176($fp)
-lw $t0, 176($fp)
-sw $t0, glo_1
-
-main_32:
-lw $t0, glo_1
-sw $t0, 188($fp)
-lw $t0, 188($fp)
-li $t1, 0
-slt $t2, $t0, $t1
-sw $t2, 192($fp)
-lw $t0, 192($fp)
-beq $t0, 1, main_35
-j main_38
-
-main_35:
-lw $t0, glo_8
-sw $t0, 200($fp)
-lw $t0, 200($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 204($fp)
-lw $t0, 204($fp)
-sw $t0, glo_8
-j main_40
-j main_39
-
-main_38:
-
-main_39:
-j main_10
-
-main_40:
-li $v0, 11
-li $a0, 62
-syscall
-li $v0, 11
-li $a0, 47
-syscall
-li $v0, 11
-li $a0, 33
-syscall
-li $v0, 11
-li $a0, 126
-syscall
-li $v0, 11
-li $a0, 118
-syscall
-li $v0, 11
-li $a0, 97
-syscall
-li $v0, 11
-li $a0, 114
-syscall
-li $v0, 11
-li $a0, 103
-syscall
-li $v0, 11
-li $a0, 49
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 105
-syscall
-li $v0, 11
-li $a0, 115
-syscall
-li $v0, 11
-li $a0, 58
-syscall
-lw $t0, glo_1
-sw $t0, 216($fp)
+sw $ra, 0($sp)
+addi $sp, $sp, -4
+li $t0, 5
+sw $t0, 0($fp)
+addi $fp, $fp, 0
+jal func
+addi $fp, $fp, 0
+addi $sp, $sp, 4
+lw $ra, 0($sp)
+lw $t0, x
+sw $t0, 8($fp)
 li $v0, 1
-lw $a0, 216($fp)
-syscall
-li $v0, 11
-li $a0, 59
-syscall
-li $v0, 11
-li $a0, 126
-syscall
-li $v0, 11
-li $a0, 10
+lw $a0, 8($fp)
 syscall
 li $v0, 0
 li $v0, 10

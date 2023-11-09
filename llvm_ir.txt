@@ -1,100 +1,20 @@
 declare i32 @getint()
 declare void @putint(i32)
 declare void @putch(i32)
-@glo_1 = dso_local global i32 0
-@glo_2 = dso_local global i32 0
-@glo_3 = dso_local global i32 0
-@glo_4 = dso_local global i32 0
-@glo_5 = dso_local global i32 0
-@glo_6 = dso_local global i32 0
-@glo_7 = dso_local global i32 0
-@glo_8 = dso_local global i32 0
-@glo_9 = dso_local global i32 0
+@x = dso_local global i32 0
+define dso_local void @func(i32 %0) {
+func_1:
+	%2 = load i32, i32* %0
+	store i32 %2, i32* @x
+func_3:
+	ret void
+}
+
 define dso_local i32 @main() {
 main_0:
-	%1 = call i32 @getint()
-	store i32 %1, i32* @glo_1
-	%2 = call i32 @getint()
-	store i32 %2, i32* @glo_2
-	%3 = call i32 @getint()
-	store i32 %3, i32* @glo_3
-	%4 = call i32 @getint()
-	store i32 %4, i32* @glo_4
-	%5 = call i32 @getint()
-	store i32 %5, i32* @glo_5
-	%6 = call i32 @getint()
-	store i32 %6, i32* @glo_6
-	%7 = call i32 @getint()
-	store i32 %7, i32* @glo_7
-	%8 = call i32 @getint()
-	store i32 %8, i32* @glo_8
-	%9 = call i32 @getint()
-	store i32 %9, i32* @glo_9
-main_10:
-	%11 = load i32, i32* @glo_9
-	%12 = icmp sge i32 %11, 0
-	br i1 %12, label %main_19, label %main_13
-main_13:
-	%14 = load i32, i32* @glo_1
-	%15 = icmp slt i32 %14, 0
-	br i1 %15, label %main_16, label %main_40
-main_16:
-	%17 = load i32, i32* @glo_8
-	%18 = icmp sle i32 0, %17
-	br i1 %18, label %main_19, label %main_40
-main_19:
-	%20 = load i32, i32* @glo_2
-	%21 = icmp sgt i32 %20, 1
-	br i1 %21, label %main_22, label %main_27
-main_22:
-	%23 = load i32, i32* @glo_2
-	%24 = sub i32 %23, 1
-	store i32 %24, i32* @glo_2
-	%25 = load i32, i32* @glo_9
-	%26 = sub i32 %25, 1
-	store i32 %26, i32* @glo_9
-	br label %main_39
-	br label %main_39
-main_27:
-	%28 = load i32, i32* @glo_2
-	%29 = sub i32 %28, 1
-	store i32 %29, i32* @glo_2
-	%30 = load i32, i32* @glo_1
-	%31 = sub i32 %30, 1
-	store i32 %31, i32* @glo_1
-main_32:
-	%33 = load i32, i32* @glo_1
-	%34 = icmp slt i32 %33, 0
-	br i1 %34, label %main_35, label %main_38
-main_35:
-	%36 = load i32, i32* @glo_8
-	%37 = sub i32 %36, 1
-	store i32 %37, i32* @glo_8
-	br label %main_40
-	br label %main_39
-main_38:
-
-main_39:
-	br label %main_10
-main_40:
-	call void @putch (i32 62)
-	call void @putch (i32 47)
-	call void @putch (i32 33)
-	call void @putch (i32 126)
-	call void @putch (i32 118)
-	call void @putch (i32 97)
-	call void @putch (i32 114)
-	call void @putch (i32 103)
-	call void @putch (i32 49)
-	call void @putch (i32 32)
-	call void @putch (i32 105)
-	call void @putch (i32 115)
-	call void @putch (i32 58)
-	%41 = load i32, i32* @glo_1
-	call void @putint(i32 %41)
-	call void @putch (i32 59)
-	call void @putch (i32 126)
-	call void @putch (i32 10)
+	call void @func(i32 5)
+	%1 = load i32, i32* @x
+	call void @putint(i32 %1)
 	ret i32 0
 }
 

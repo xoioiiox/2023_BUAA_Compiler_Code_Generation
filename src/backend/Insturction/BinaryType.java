@@ -1,9 +1,9 @@
 package backend.Insturction;
 
 public enum BinaryType {
-    add,
-    sub,
-    mul,
+    addu,
+    subu,
+    mulu,
     div, // div + mflo
     mod // div + mfhi
 }

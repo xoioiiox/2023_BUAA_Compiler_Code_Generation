@@ -1,31 +1,11 @@
-int glo_1, glo_2, glo_3, glo_4, glo_5, glo_6, glo_7, glo_8, glo_9;
+int x;
+
+void func(int a) {
+    x = a;
+}
+
 int main() {
-	glo_1 = getint();
-	glo_2 = getint();
-	glo_3 = getint();
-	glo_4 = getint();
-	glo_5 = getint();
-	glo_6 = getint();
-	glo_7 = getint();
-	glo_8 = getint();
-	glo_9 = getint();
-	for(;glo_9 >= 0 || glo_1 < 0 && 0 <= glo_8 ;) {
-		if(glo_2>1) {
-			glo_2 = glo_2 - 1;
-			glo_9 = glo_9 - 1;
-			continue;
-		} else {
-			glo_2 = glo_2 - 1;
-			glo_1 = glo_1 - 1;
-			if (glo_1 < 0) {
-				glo_8 = glo_8 - 1;
-				break;
-			}
-			else {
-				;
-			}
-		}
-	}
-	printf(">/!~varg1 is:%d;~\n", glo_1);
-	return 0;
+    func(5);
+    printf("%d", x);
+    return 0;
 }

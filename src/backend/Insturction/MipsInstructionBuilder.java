@@ -155,7 +155,7 @@ public class MipsInstructionBuilder {
                 int elementNum = ((IrArrayType) valueType1).getElementNum();
                 Li li = new Li(new MipsReg(10), elementNum);
                 this.mipsInstructions.add(li);
-                Binary binary = new Binary(BinaryType.mul, new MipsReg(9), new MipsReg(9), new MipsReg(10));
+                Binary binary = new Binary(BinaryType.mulu, new MipsReg(9), new MipsReg(9), new MipsReg(10));
                 this.mipsInstructions.add(binary);
             }
         } else { //一定是二维
@@ -174,15 +174,15 @@ public class MipsInstructionBuilder {
             getIndex(value2, new MipsReg(10));
             Li li = new Li(new MipsReg(11), elementNum2);
             this.mipsInstructions.add(li);
-            Binary binary = new Binary(BinaryType.mul, new MipsReg(12), new MipsReg(9), new MipsReg(11));
+            Binary binary = new Binary(BinaryType.mulu, new MipsReg(12), new MipsReg(9), new MipsReg(11));
             this.mipsInstructions.add(binary);
-            Binary binary1 = new Binary(BinaryType.add, new MipsReg(9), new MipsReg(12), new MipsReg(10));
+            Binary binary1 = new Binary(BinaryType.addu, new MipsReg(9), new MipsReg(12), new MipsReg(10));
             this.mipsInstructions.add(binary1);
         }
         /*------计算绝对位置------*/
         Sll sll = new Sll(new MipsReg(9), new MipsReg(9), 2);
         this.mipsInstructions.add(sll);
-        Binary binary = new Binary(BinaryType.add, new MipsReg(10), new MipsReg(8), new MipsReg(9));
+        Binary binary = new Binary(BinaryType.addu, new MipsReg(10), new MipsReg(8), new MipsReg(9));
         this.mipsInstructions.add(binary);
         int offset = this.symbolTable.getOffset(null);
         Sw sw = new Sw(new MipsReg(10), new MipsReg(30), offset);
@@ -251,7 +251,7 @@ public class MipsInstructionBuilder {
         }
         /*------生成指令(add sub...)------*/
         BinaryType binaryType = getBinaryType(irBinaryInst.getType());
-        if (binaryType == BinaryType.add || binaryType == BinaryType.sub || binaryType == BinaryType.mul) {
+        if (binaryType == BinaryType.addu || binaryType == BinaryType.subu || binaryType == BinaryType.mulu) {
             Binary binary = new Binary(binaryType,
                     new MipsReg(10), new MipsReg(8), new MipsReg(9));
             this.mipsInstructions.add(binary);
@@ -279,9 +279,9 @@ public class MipsInstructionBuilder {
     public BinaryType getBinaryType(IrBinaryType type) {
         BinaryType binaryType = null;
         switch(type) {
-            case add: binaryType = BinaryType.add; break;
-            case sub: binaryType = BinaryType.sub; break;
-            case mul: binaryType = BinaryType.mul; break;
+            case add: binaryType = BinaryType.addu; break;
+            case sub: binaryType = BinaryType.subu; break;
+            case mul: binaryType = BinaryType.mulu; break;
             case sdiv: binaryType = BinaryType.div; break;
             case srem: binaryType = BinaryType.mod; break;
             //todo
