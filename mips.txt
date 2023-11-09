@@ -1,5 +1,14 @@
 #----------全局变量区-----------
 .data
+glo_1: .word 0
+glo_2: .word 0
+glo_3: .word 0
+glo_4: .word 0
+glo_5: .word 0
+glo_6: .word 0
+glo_7: .word 0
+glo_8: .word 0
+glo_9: .word 0
 .text
 li $fp, 0x10040000
 #----------存储全局变量到内存-----------
@@ -9,718 +18,191 @@ j main
 
 #----------全局函数及主函数-----------
 #----------------函数入口-----------------
-fun1:
-fun10:
-li $t0, 4
-sw $t0, 4($fp)
-li $t0, 6
-sw $t0, 12($fp)
-lw $t0, 4($fp)
-sw $t0, 20($fp)
-lw $t0, 20($fp)
-sw $t0, 12($fp)
-li $t0, 3
-sw $t0, 0($fp)
+main:
+main_0:
+li $v0, 5
+syscall
+sw $v0, 0($fp)
 lw $t0, 0($fp)
-sw $t0, 28($fp)
-lw $t0, 28($fp)
-li $t1, 20
-div $t0, $t1
-mfhi $t2
-sw $t2, 32($fp)
-lw $t0, 32($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 36($fp)
-lw $t0, 36($fp)
-li $t1, 9
-add $t2, $t0, $t1
-sw $t2, 40($fp)
-lw $t0, 40($fp)
-sw $t0, 0($fp)
-li $t0, 0
-sw $t0, 44($fp)
-
-fun110:
-lw $t0, 44($fp)
-sw $t0, 52($fp)
-lw $t0, 52($fp)
-li $t1, 7
-sle $t2, $t0, $t1
-sw $t2, 56($fp)
-lw $t0, 56($fp)
-beq $t0, 1, fun113
-j fun128
-
-fun113:
-lw $t0, 44($fp)
-sw $t0, 60($fp)
-lw $t0, 60($fp)
-li $t1, 1
-add $t2, $t0, $t1
-sw $t2, 64($fp)
-lw $t0, 64($fp)
-sw $t0, 44($fp)
-
-fun116:
-lw $t0, 0($fp)
-sw $t0, 68($fp)
-lw $t0, 44($fp)
-sw $t0, 72($fp)
-lw $t0, 68($fp)
-lw $t1, 72($fp)
-seq $t2, $t0, $t1
-sw $t2, 76($fp)
-lw $t0, 76($fp)
-beq $t0, 1, fun120
-j fun124
-
-fun120:
-lw $t0, 4($fp)
-sw $t0, 80($fp)
-lw $t0, 0($fp)
-sw $t0, 84($fp)
-lw $t0, 80($fp)
-lw $t1, 84($fp)
-add $t2, $t0, $t1
-sw $t2, 88($fp)
-lw $t0, 88($fp)
-sw $t0, 4($fp)
-j fun127
-j fun124
-
-fun124:
-lw $t0, 0($fp)
-sw $t0, 92($fp)
-lw $t0, 92($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 96($fp)
-lw $t0, 96($fp)
-sw $t0, 0($fp)
-
-fun127:
-j fun110
-
-fun128:
-li $v0, 11
-li $a0, 106
+sw $t0, glo_1
+li $v0, 5
 syscall
-li $v0, 11
-li $a0, 32
+sw $v0, 8($fp)
+lw $t0, 8($fp)
+sw $t0, glo_2
+li $v0, 5
 syscall
-li $v0, 11
-li $a0, 58
+sw $v0, 16($fp)
+lw $t0, 16($fp)
+sw $t0, glo_3
+li $v0, 5
 syscall
-li $v0, 11
-li $a0, 32
-syscall
-lw $t0, 0($fp)
-sw $t0, 100($fp)
-li $v0, 1
-lw $a0, 100($fp)
-syscall
-li $v0, 11
-li $a0, 44
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 107
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 58
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-lw $t0, 4($fp)
-sw $t0, 104($fp)
-li $v0, 1
-lw $a0, 104($fp)
-syscall
-li $v0, 11
-li $a0, 44
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 108
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 58
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-lw $t0, 12($fp)
-sw $t0, 108($fp)
-li $v0, 1
-lw $a0, 108($fp)
-syscall
-li $v0, 11
-li $a0, 10
-syscall
-jr $ra
-
-
-#----------------函数入口-----------------
-fun2:
-fun21:
-li $t0, 1
-sw $t0, 4($fp)
-li $t0, 1
-sw $t0, 12($fp)
-
-fun24:
-lw $t0, 0($fp)
-sw $t0, 20($fp)
-lw $t0, 20($fp)
-li $t1, 1
-sge $t2, $t0, $t1
-sw $t2, 24($fp)
+sw $v0, 24($fp)
 lw $t0, 24($fp)
-beq $t0, 1, fun27
-j fun224
-
-fun27:
-lw $t0, 4($fp)
-sw $t0, 28($fp)
-lw $t0, 0($fp)
-sw $t0, 32($fp)
-lw $t0, 28($fp)
-lw $t1, 32($fp)
-mul $t2, $t0, $t1
-sw $t2, 36($fp)
-lw $t0, 36($fp)
-sw $t0, 4($fp)
-lw $t0, 0($fp)
-sw $t0, 40($fp)
+sw $t0, glo_4
+li $v0, 5
+syscall
+sw $v0, 32($fp)
+lw $t0, 32($fp)
+sw $t0, glo_5
+li $v0, 5
+syscall
+sw $v0, 40($fp)
 lw $t0, 40($fp)
+sw $t0, glo_6
+li $v0, 5
+syscall
+sw $v0, 48($fp)
+lw $t0, 48($fp)
+sw $t0, glo_7
+li $v0, 5
+syscall
+sw $v0, 56($fp)
+lw $t0, 56($fp)
+sw $t0, glo_8
+li $v0, 5
+syscall
+sw $v0, 64($fp)
+lw $t0, 64($fp)
+sw $t0, glo_9
+
+main_10:
+lw $t0, glo_9
+sw $t0, 76($fp)
+lw $t0, 76($fp)
+li $t1, 0
+sge $t2, $t0, $t1
+sw $t2, 80($fp)
+lw $t0, 80($fp)
+beq $t0, 1, main_19
+j main_13
+
+main_13:
+lw $t0, glo_1
+sw $t0, 88($fp)
+lw $t0, 88($fp)
+li $t1, 0
+slt $t2, $t0, $t1
+sw $t2, 92($fp)
+lw $t0, 92($fp)
+beq $t0, 1, main_16
+j main_40
+
+main_16:
+lw $t0, glo_8
+sw $t0, 100($fp)
+li $t0, 0
+lw $t1, 100($fp)
+sle $t2, $t0, $t1
+sw $t2, 104($fp)
+lw $t0, 104($fp)
+beq $t0, 1, main_19
+j main_40
+
+main_19:
+lw $t0, glo_2
+sw $t0, 112($fp)
+lw $t0, 112($fp)
+li $t1, 1
+sgt $t2, $t0, $t1
+sw $t2, 116($fp)
+lw $t0, 116($fp)
+beq $t0, 1, main_22
+j main_27
+
+main_22:
+lw $t0, glo_2
+sw $t0, 124($fp)
+lw $t0, 124($fp)
 li $t1, 1
 sub $t2, $t0, $t1
-sw $t2, 44($fp)
-lw $t0, 44($fp)
-sw $t0, 0($fp)
-
-fun213:
-lw $t0, 0($fp)
-sw $t0, 48($fp)
-lw $t0, 48($fp)
+sw $t2, 128($fp)
+lw $t0, 128($fp)
+sw $t0, glo_2
+lw $t0, glo_9
+sw $t0, 140($fp)
+lw $t0, 140($fp)
 li $t1, 1
-seq $t2, $t0, $t1
-sw $t2, 52($fp)
-lw $t0, 52($fp)
-beq $t0, 1, fun216
-j fun217
+sub $t2, $t0, $t1
+sw $t2, 144($fp)
+lw $t0, 144($fp)
+sw $t0, glo_9
+j main_39
+j main_39
 
-fun216:
-j fun224
-j fun223
-
-fun217:
-lw $t0, 0($fp)
-sw $t0, 56($fp)
-lw $t0, 56($fp)
+main_27:
+lw $t0, glo_2
+sw $t0, 156($fp)
+lw $t0, 156($fp)
 li $t1, 1
-sne $t2, $t0, $t1
-sw $t2, 60($fp)
-lw $t0, 60($fp)
-beq $t0, 1, fun220
-j fun223
-
-fun220:
-lw $t0, 12($fp)
-sw $t0, 64($fp)
-lw $t0, 64($fp)
+sub $t2, $t0, $t1
+sw $t2, 160($fp)
+lw $t0, 160($fp)
+sw $t0, glo_2
+lw $t0, glo_1
+sw $t0, 172($fp)
+lw $t0, 172($fp)
 li $t1, 1
-add $t2, $t0, $t1
-sw $t2, 68($fp)
-lw $t0, 68($fp)
-sw $t0, 12($fp)
-j fun223
+sub $t2, $t0, $t1
+sw $t2, 176($fp)
+lw $t0, 176($fp)
+sw $t0, glo_1
 
-fun223:
-j fun24
+main_32:
+lw $t0, glo_1
+sw $t0, 188($fp)
+lw $t0, 188($fp)
+li $t1, 0
+slt $t2, $t0, $t1
+sw $t2, 192($fp)
+lw $t0, 192($fp)
+beq $t0, 1, main_35
+j main_38
 
-fun224:
+main_35:
+lw $t0, glo_8
+sw $t0, 200($fp)
+lw $t0, 200($fp)
+li $t1, 1
+sub $t2, $t0, $t1
+sw $t2, 204($fp)
+lw $t0, 204($fp)
+sw $t0, glo_8
+j main_40
+j main_39
+
+main_38:
+
+main_39:
+j main_10
+
+main_40:
 li $v0, 11
-li $a0, 97
+li $a0, 62
+syscall
+li $v0, 11
+li $a0, 47
 syscall
 li $v0, 11
 li $a0, 33
 syscall
 li $v0, 11
-li $a0, 32
+li $a0, 126
 syscall
 li $v0, 11
-li $a0, 61
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-lw $t0, 4($fp)
-sw $t0, 72($fp)
-li $v0, 1
-lw $a0, 72($fp)
-syscall
-li $v0, 11
-li $a0, 44
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 110
-syscall
-li $v0, 11
-li $a0, 117
-syscall
-li $v0, 11
-li $a0, 109
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 61
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-lw $t0, 12($fp)
-sw $t0, 76($fp)
-li $v0, 1
-lw $a0, 76($fp)
-syscall
-li $v0, 11
-li $a0, 10
-syscall
-li $v0, 1
-jr $ra
-
-
-#----------------函数入口-----------------
-fun3:
-fun32:
-lw $t0, 0($fp)
-sw $t0, 8($fp)
-lw $t0, 4($fp)
-sw $t0, 12($fp)
-lw $t0, 8($fp)
-lw $t1, 12($fp)
-sgt $t2, $t0, $t1
-sw $t2, 16($fp)
-lw $t0, 16($fp)
-beq $t0, 1, fun36
-j fun38
-
-fun36:
-lw $t0, 0($fp)
-sw $t0, 20($fp)
-lw $v0, 20($fp)
-jr $ra
-j fun314
-
-fun38:
-lw $t0, 0($fp)
-sw $t0, 24($fp)
-lw $t0, 4($fp)
-sw $t0, 28($fp)
-lw $t0, 24($fp)
-lw $t1, 28($fp)
-slt $t2, $t0, $t1
-sw $t2, 32($fp)
-lw $t0, 32($fp)
-beq $t0, 1, fun312
-j fun314
-
-fun312:
-lw $t0, 4($fp)
-sw $t0, 36($fp)
-lw $v0, 36($fp)
-jr $ra
-j fun314
-
-fun314:
-lw $t0, 0($fp)
-sw $t0, 40($fp)
-lw $v0, 40($fp)
-jr $ra
-
-
-#----------------函数入口-----------------
-gcd:
-gcd2:
-lw $t0, 0($fp)
-sw $t0, 8($fp)
-lw $t0, 4($fp)
-sw $t0, 12($fp)
-lw $t0, 8($fp)
-lw $t1, 12($fp)
-div $t0, $t1
-mfhi $t2
-sw $t2, 16($fp)
-lw $t0, 16($fp)
-li $t1, 0
-seq $t2, $t0, $t1
-sw $t2, 20($fp)
-lw $t0, 20($fp)
-beq $t0, 1, gcd7
-j gcd9
-
-gcd7:
-lw $t0, 4($fp)
-sw $t0, 24($fp)
-lw $v0, 24($fp)
-jr $ra
-j gcd9
-
-gcd9:
-lw $t0, 4($fp)
-sw $t0, 28($fp)
-lw $t0, 0($fp)
-sw $t0, 32($fp)
-lw $t0, 4($fp)
-sw $t0, 36($fp)
-lw $t0, 32($fp)
-lw $t1, 36($fp)
-div $t0, $t1
-mfhi $t2
-sw $t2, 40($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 28($fp)
-sw $t0, 44($fp)
-lw $t0, 40($fp)
-sw $t0, 48($fp)
-addi $fp, $fp, 44
-jal gcd
-addi $fp, $fp, -44
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 52($fp)
-lw $v0, 52($fp)
-jr $ra
-
-
-#----------------函数入口-----------------
-lcm:
-lcm2:
-lw $t0, 0($fp)
-sw $t0, 12($fp)
-lw $t0, 4($fp)
-sw $t0, 16($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 12($fp)
-sw $t0, 20($fp)
-lw $t0, 16($fp)
-sw $t0, 24($fp)
-addi $fp, $fp, 20
-jal gcd
-addi $fp, $fp, -20
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 28($fp)
-lw $t0, 28($fp)
-sw $t0, 8($fp)
-lw $t0, 0($fp)
-sw $t0, 32($fp)
-lw $t0, 4($fp)
-sw $t0, 36($fp)
-lw $t0, 32($fp)
-lw $t1, 36($fp)
-mul $t2, $t0, $t1
-sw $t2, 40($fp)
-lw $t0, 8($fp)
-sw $t0, 44($fp)
-lw $t0, 40($fp)
-lw $t1, 44($fp)
-div $t0, $t1
-mflo $t2
-sw $t2, 48($fp)
-lw $v0, 48($fp)
-jr $ra
-
-
-#----------------函数入口-----------------
-fun4:
-fun43:
-lw $t0, 0($fp)
-sw $t0, 16($fp)
-lw $t0, 4($fp)
-sw $t0, 20($fp)
-lw $t0, 16($fp)
-lw $t1, 20($fp)
-add $t2, $t0, $t1
-sw $t2, 24($fp)
-lw $t0, 8($fp)
-sw $t0, 28($fp)
-lw $t0, 24($fp)
-lw $t1, 28($fp)
-sub $t2, $t0, $t1
-sw $t2, 32($fp)
-lw $t0, 0($fp)
-sw $t0, 36($fp)
-lw $t0, 32($fp)
-lw $t1, 36($fp)
-mul $t2, $t0, $t1
-sw $t2, 40($fp)
-lw $t0, 40($fp)
-sw $t0, 12($fp)
-lw $t0, 12($fp)
-sw $t0, 44($fp)
-li $v0, 1
-lw $a0, 44($fp)
-syscall
-li $v0, 11
-li $a0, 10
-syscall
-jr $ra
-
-
-#----------------函数入口-----------------
-fun5:
-fun51:
-lw $t0, 0($fp)
-sw $t0, 4($fp)
-lw $t0, 4($fp)
-li $t1, 1
-seq $t2, $t0, $t1
-sw $t2, 8($fp)
-lw $t0, 8($fp)
-beq $t0, 1, fun54
-j fun55
-
-fun54:
-li $v0, 1
-jr $ra
-j fun59
-
-fun55:
-lw $t0, 0($fp)
-sw $t0, 12($fp)
-lw $t0, 12($fp)
-li $t1, 2
-seq $t2, $t0, $t1
-sw $t2, 16($fp)
-lw $t0, 16($fp)
-beq $t0, 1, fun58
-j fun59
-
-fun58:
-li $v0, 1
-jr $ra
-j fun59
-
-fun59:
-lw $t0, 0($fp)
-sw $t0, 20($fp)
-lw $t0, 20($fp)
-li $t1, 1
-sub $t2, $t0, $t1
-sw $t2, 24($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 24($fp)
-sw $t0, 28($fp)
-addi $fp, $fp, 28
-jal fun5
-addi $fp, $fp, -28
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 32($fp)
-lw $t0, 0($fp)
-sw $t0, 36($fp)
-lw $t0, 36($fp)
-li $t1, 2
-sub $t2, $t0, $t1
-sw $t2, 40($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 40($fp)
-sw $t0, 44($fp)
-addi $fp, $fp, 44
-jal fun5
-addi $fp, $fp, -44
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 48($fp)
-lw $t0, 32($fp)
-lw $t1, 48($fp)
-add $t2, $t0, $t1
-sw $t2, 52($fp)
-lw $v0, 52($fp)
-jr $ra
-
-
-#----------------函数入口-----------------
-main:
-main0:
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-addi $fp, $fp, 0
-jal fun1
-addi $fp, $fp, 0
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-li $t0, 6
-sw $t0, 0($fp)
-addi $fp, $fp, 0
-jal fun2
-addi $fp, $fp, 0
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 4($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-li $t0, 3
-sw $t0, 8($fp)
-li $t0, 6
-sw $t0, 12($fp)
-addi $fp, $fp, 8
-jal fun3
-addi $fp, $fp, -8
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 16($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-li $t0, 2
-sw $t0, 20($fp)
-lw $t0, 16($fp)
-sw $t0, 24($fp)
-addi $fp, $fp, 20
-jal fun3
-addi $fp, $fp, -20
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 28($fp)
-li $v0, 1
-lw $a0, 28($fp)
-syscall
-li $v0, 11
-li $a0, 10
-syscall
-li $v0, 11
-li $a0, 115
-syscall
-li $v0, 11
-li $a0, 99
+li $a0, 118
 syscall
 li $v0, 11
 li $a0, 97
 syscall
 li $v0, 11
-li $a0, 110
-syscall
-li $v0, 11
-li $a0, 102
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 97
-syscall
-li $v0, 11
-li $a0, 44
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 98
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 116
-syscall
-li $v0, 11
-li $a0, 111
-syscall
-li $v0, 11
-li $a0, 32
+li $a0, 114
 syscall
 li $v0, 11
 li $a0, 103
 syscall
 li $v0, 11
-li $a0, 101
-syscall
-li $v0, 11
-li $a0, 116
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 103
-syscall
-li $v0, 11
-li $a0, 99
-syscall
-li $v0, 11
-li $a0, 100
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 97
-syscall
-li $v0, 11
-li $a0, 110
-syscall
-li $v0, 11
-li $a0, 100
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 108
-syscall
-li $v0, 11
-li $a0, 99
-syscall
-li $v0, 11
-li $a0, 109
-syscall
-li $v0, 11
-li $a0, 10
-syscall
-li $v0, 5
-syscall
-sw $v0, 40($fp)
-lw $t0, 40($fp)
-sw $t0, 32($fp)
-li $v0, 5
-syscall
-sw $v0, 44($fp)
-lw $t0, 44($fp)
-sw $t0, 36($fp)
-li $v0, 11
-li $a0, 103
-syscall
-li $v0, 11
-li $a0, 99
-syscall
-li $v0, 11
-li $a0, 100
+li $a0, 49
 syscall
 li $v0, 11
 li $a0, 32
@@ -732,208 +214,18 @@ li $v0, 11
 li $a0, 115
 syscall
 li $v0, 11
-li $a0, 32
+li $a0, 58
 syscall
-lw $t0, 32($fp)
-sw $t0, 48($fp)
-lw $t0, 36($fp)
-sw $t0, 52($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 48($fp)
-sw $t0, 56($fp)
-lw $t0, 52($fp)
-sw $t0, 60($fp)
-addi $fp, $fp, 56
-jal gcd
-addi $fp, $fp, -56
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 64($fp)
+lw $t0, glo_1
+sw $t0, 216($fp)
 li $v0, 1
-lw $a0, 64($fp)
+lw $a0, 216($fp)
 syscall
 li $v0, 11
-li $a0, 10
+li $a0, 59
 syscall
 li $v0, 11
-li $a0, 108
-syscall
-li $v0, 11
-li $a0, 99
-syscall
-li $v0, 11
-li $a0, 109
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 105
-syscall
-li $v0, 11
-li $a0, 115
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-lw $t0, 32($fp)
-sw $t0, 68($fp)
-lw $t0, 36($fp)
-sw $t0, 72($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 68($fp)
-sw $t0, 76($fp)
-lw $t0, 72($fp)
-sw $t0, 80($fp)
-addi $fp, $fp, 76
-jal lcm
-addi $fp, $fp, -76
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 84($fp)
-li $v0, 1
-lw $a0, 84($fp)
-syscall
-li $v0, 11
-li $a0, 10
-syscall
-li $v0, 5
-syscall
-sw $v0, 92($fp)
-lw $t0, 92($fp)
-sw $t0, 88($fp)
-lw $t0, 88($fp)
-sw $t0, 96($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 96($fp)
-sw $t0, 100($fp)
-li $t0, 3
-sw $t0, 104($fp)
-li $t0, 10
-sw $t0, 108($fp)
-addi $fp, $fp, 100
-jal fun4
-addi $fp, $fp, -100
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-li $v0, 11
-li $a0, 115
-syscall
-li $v0, 11
-li $a0, 99
-syscall
-li $v0, 11
-li $a0, 97
-syscall
-li $v0, 11
-li $a0, 110
-syscall
-li $v0, 11
-li $a0, 102
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 97
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 116
-syscall
-li $v0, 11
-li $a0, 111
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 103
-syscall
-li $v0, 11
-li $a0, 101
-syscall
-li $v0, 11
-li $a0, 116
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 70
-syscall
-li $v0, 11
-li $a0, 105
-syscall
-li $v0, 11
-li $a0, 98
-syscall
-li $v0, 11
-li $a0, 111
-syscall
-li $v0, 11
-li $a0, 110
-syscall
-li $v0, 11
-li $a0, 97
-syscall
-li $v0, 11
-li $a0, 99
-syscall
-li $v0, 11
-li $a0, 99
-syscall
-li $v0, 11
-li $a0, 105
-syscall
-li $v0, 11
-li $a0, 10
-syscall
-li $v0, 5
-syscall
-sw $v0, 116($fp)
-lw $t0, 116($fp)
-sw $t0, 112($fp)
-li $v0, 11
-li $a0, 102
-syscall
-li $v0, 11
-li $a0, 105
-syscall
-li $v0, 11
-li $a0, 98
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-li $v0, 11
-li $a0, 105
-syscall
-li $v0, 11
-li $a0, 115
-syscall
-li $v0, 11
-li $a0, 32
-syscall
-lw $t0, 112($fp)
-sw $t0, 120($fp)
-sw $ra, 0($sp)
-addi $sp, $sp, -4
-lw $t0, 120($fp)
-sw $t0, 124($fp)
-addi $fp, $fp, 124
-jal fun5
-addi $fp, $fp, -124
-addi $sp, $sp, 4
-lw $ra, 0($sp)
-sw $v0, 128($fp)
-li $v0, 1
-lw $a0, 128($fp)
+li $a0, 126
 syscall
 li $v0, 11
 li $a0, 10

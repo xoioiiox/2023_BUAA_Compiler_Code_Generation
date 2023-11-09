@@ -97,12 +97,13 @@ public class IrBasicBlockBuilder {
         // 处理for头-执行forStmt1初始化语句 todo 可能有空缺
         ForStmt forStmt1 = stmtFor.getForStmt1();
         if (forStmt1 != null) {
-            IrBasicBlock curBasicBlock = this.basicBlocks.get(this.basicBlocks.size() - 1); //当前基本块
+            IrBasicBlock basicBlock = new IrBasicBlock(funcName + this.nameCnt.getCnt());//当前基本块
+            this.basicBlocks.add(basicBlock);
             StmtAssign stmtAssign1 = new StmtAssign(forStmt1.getlVal(), forStmt1.getExp());
             BlockItem blockItem = new BlockItem(stmtAssign1);
             IrInstructionBuilder instructionBuilder
                     = new IrInstructionBuilder(this.symbolTable, blockItem, this.nameCnt);
-            curBasicBlock.getInstructions().addAll(instructionBuilder.genIrInstruction());
+            basicBlock.getInstructions().addAll(instructionBuilder.genIrInstruction());
         }
         // 处理cond
         String condLabel = String.valueOf(this.nameCnt.getCntOnly());
@@ -133,16 +134,16 @@ public class IrBasicBlockBuilder {
             forStmt2Block.getInstructions().addAll(instructionBuilder.genIrInstruction());
         }
         // 末尾追加跳转到For头语句
-        IrBr brIfEnd = new IrBr(funcName + condLabel);
-        forStmt2Block.addInstruction(brIfEnd);
+        IrBr brCondBegin = new IrBr(funcName + condLabel);
+        forStmt2Block.addInstruction(brCondBegin);
         String forEndLabel = String.valueOf(this.nameCnt.getCntOnly());
         if (cond != null) {
-            // 对于整个cond的最后一条语句，若不为真，则要跳转到for语句后接的基本块
-            ArrayList<IrBasicBlock> basicBlocks1 = blocks.get(blocks.size() - 1);
-            IrBasicBlock basicBlock1 = basicBlocks1.get(basicBlocks1.size() - 1);
-            IrInstruction instruction = basicBlock1.getInstructions().get(basicBlock1.getInstructions().size() - 1);
-            IrBr irBr = (IrBr) instruction;
-            irBr.setFalseLabel(funcName + forEndLabel);
+            // 最后一个与语句的各个子句错误应跳转到for后
+            ArrayList<IrBasicBlock> basicBlocks = blocks.get(blocks.size() - 1);
+            for (IrBasicBlock irBasicBlock : basicBlocks) {
+                IrBr irBr = (IrBr) irBasicBlock.getInstructions().get(irBasicBlock.getInstructions().size() - 1);
+                irBr.setFalseLabel(funcName + forEndLabel);
+            }
         }
         for (IrBr breakBr : breaks) {
             breakBr.setLabel(funcName + forEndLabel);
@@ -187,6 +188,19 @@ public class IrBasicBlockBuilder {
             this.basicBlocks.addAll(irBasicBlocks1);
             this.breaks.addAll(irBasicBlockBuilder1.getBreaks());
             this.continues.addAll(irBasicBlockBuilder1.getContinues());
+        }
+        // 对于只有一个或语句的，其中每条与语句的错误label都应为else
+        if (stmtIf.getCond().getlOrExp().getlAndExps().size() == 1) {
+            for (IrBasicBlock basicBlock : blocks.get(0)) {
+                IrBr irBr = (IrBr) basicBlock.getInstructions().get(basicBlock.getInstructions().size() - 1);
+                irBr.setFalseLabel(funcName + elseBeginLabel);
+            }
+        }
+        // 最后一个与语句的各个子句错误应跳转到else开始
+        ArrayList<IrBasicBlock> basicBlocks = blocks.get(blocks.size() - 1);
+        for (IrBasicBlock irBasicBlock : basicBlocks) {
+            IrBr irBr = (IrBr) irBasicBlock.getInstructions().get(irBasicBlock.getInstructions().size() - 1);
+            irBr.setFalseLabel(funcName + elseBeginLabel);
         }
         // 对于整个cond的最后一条语句，若不为真，则要跳转到else
         ArrayList<IrBasicBlock> basicBlocks1 = blocks.get(blocks.size() - 1);
@@ -265,7 +279,7 @@ public class IrBasicBlockBuilder {
             op1 = icmp;
         }
         // 生成Br语句，加入当前基本块
-        // 正确则跳转下一与语句，否则跳到下一或语句
+        // 正确则跳转下一与语句，否则跳到下一或语句 todo 只有一个或语句？
         IrBr irBr = new IrBr(op1, funcName + this.nameCnt.getCntOnly(), "#");
         curBasicBlock.addInstruction(irBr);
         this.basicBlocks.add(curBasicBlock);
@@ -304,6 +318,7 @@ public class IrBasicBlockBuilder {
                 icmp = new IrIcmp(name, IrIcmpType.sge, valueType, op1, op2);
             }
             curBasicBlock.addInstruction(icmp);
+            op1 = icmp;
             if (i != addExps.size() - 1) {
                 String name1 = "%" + this.nameCnt.getCnt();
                 IrZext irZext = new IrZext(name1, icmp, new IrIntType(32));

@@ -20,13 +20,11 @@ import java.util.ArrayList;
 public class IrFunctionBuilder {
     private SymbolTable symbolTable;
     private FuncDef funcDef;
-    private ArrayList<IrBasicBlock> irBasicBlocks;
     private NameCnt nameCnt;
 
     public IrFunctionBuilder(SymbolTable symbolTable, FuncDef funcDef) {
         this.symbolTable = symbolTable;
         this.funcDef = funcDef;
-        this.irBasicBlocks = new ArrayList<>();
         this.nameCnt = new NameCnt();
     }
 
@@ -86,14 +84,14 @@ public class IrFunctionBuilder {
         symbolFunc.setValue(function);
         /*------function block------*/
         IrBasicBlockBuilder basicBlockBuilder
-                = new IrBasicBlockBuilder(funcDef.getIdent().getVal(), symbolTable, funcDef.getBlock(), nameCnt);
+                = new IrBasicBlockBuilder(funcDef.getIdent().getVal() + "_", symbolTable, funcDef.getBlock(), nameCnt);
         ArrayList<IrBasicBlock> blocks = basicBlockBuilder.genIrBasicBlock();
         function.setBasicBlocks(blocks);
-        IrBasicBlock lastBlock = blocks.get(blocks.size() - 1);
-        IrInstruction instruction = lastBlock.getInstructions().get(lastBlock.getInstructions().size() - 1);
-        if (!(instruction instanceof IrRet)) {
+        if (funcDef.getFuncType().getType() == -1) { //void 一律在末尾加return
+            IrBasicBlock basicBlock = new IrBasicBlock(funcDef.getIdent().getVal() +"_" + this.nameCnt.getCnt());
+            blocks.add(basicBlock);
             IrRet irRet = new IrRet(new IrVoidType(), false);
-            lastBlock.addInstruction(irRet);
+            basicBlock.addInstruction(irRet);
         }
         return function;
     }

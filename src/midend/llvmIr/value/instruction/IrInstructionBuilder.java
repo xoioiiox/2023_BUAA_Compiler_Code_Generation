@@ -20,10 +20,7 @@ import midend.llvmIr.value.instruction.memory.IrLoad;
 import midend.llvmIr.value.instruction.memory.IrStore;
 import midend.llvmIr.value.instruction.terminator.IrCall;
 import midend.llvmIr.value.instruction.terminator.IrRet;
-import midend.symbol.Symbol;
-import midend.symbol.SymbolFunc;
-import midend.symbol.SymbolTable;
-import midend.symbol.SymbolVar;
+import midend.symbol.*;
 
 import java.util.ArrayList;
 
@@ -130,10 +127,14 @@ public class IrInstructionBuilder {
                 IrAlloca irAlloca = new IrAlloca(valueType, value);
                 this.irInstructions.add(irAlloca);
                 /*---赋值前先获取全部初始值---*/
-                ArrayList<Integer> initVal = new ArrayList<>();
+                ArrayList<IrValue> initVal = new ArrayList<>();
                 if (constDef.getConstInitVal() != null) {
                     for (ConstInitVal constInitVal : constDef.getConstInitVal().getConstInitVals()) {
-                        initVal.add(constInitVal.calculate(symbolTable));
+                        Exp exp = new Exp(constInitVal.getConstExp().getAddExp());
+                        IrValue value1 = genExp(exp);
+                        IrStore irStore = new IrStore(value, value1);
+                        this.irInstructions.add(irStore);
+                        initVal.add(value1);
                     }
                 }
                 /*---获取数组地址，赋值---*/
@@ -142,31 +143,34 @@ public class IrInstructionBuilder {
                     IrGetElementPtr getElementPtr = new IrGetElementPtr
                             (valueType, name1, valueType, value, new IrIntType(32), new IrValue(String.valueOf(i)), false);
                     this.irInstructions.add(getElementPtr);
-                    IrStore irStore = new IrStore(getElementPtr,
-                            new IrValue(String.valueOf(initVal.get(i)), new IrIntType(32)));
+                    IrStore irStore = new IrStore(getElementPtr, initVal.get(i));
                     this.irInstructions.add(irStore);
 
                 }
                 /*---填入符号表---*/
-                Symbol symbol = new SymbolVar(constDef.getIdent().getVal(), constDef.getDimension(), value);
+                Symbol symbol = new SymbolCon(constDef.getIdent().getVal(), constDef.getDimension(), value);
                 this.symbolTable.addSymbol(symbol);
             }
             else {
                 /*---定义类型和值，并分配内存---*/
                 int eleNum1 = constDef.getConstExps().get(0).calculate(symbolTable);
                 int eleNum2 = constDef.getConstExps().get(1).calculate(symbolTable);
-                IrArrayType irArrayType = new IrArrayType(new IrIntType(32), eleNum1);
+                IrArrayType irArrayType = new IrArrayType(new IrIntType(32), eleNum2);
                 IrValueType valueType = new IrArrayType(irArrayType, eleNum1, eleNum2);
                 IrValue value = new IrValue(name, valueType);
                 IrAlloca irAlloca = new IrAlloca(valueType, value);
                 this.irInstructions.add(irAlloca);
                 /*---赋值前先获取全部初始值---*/
-                ArrayList<ArrayList<Integer>> initVal = new ArrayList<>();
+                ArrayList<ArrayList<IrValue>> initVal = new ArrayList<>();
                 if (constDef.getConstInitVal() != null) {
                     for (ConstInitVal constInitVal : constDef.getConstInitVal().getConstInitVals()) {
-                        ArrayList<Integer> initVal_ = new ArrayList<>();
+                        ArrayList<IrValue> initVal_ = new ArrayList<>();
                         for (ConstInitVal constInitVal2 : constInitVal.getConstInitVals()) {
-                            initVal_.add(constInitVal2.calculate(symbolTable));
+                            Exp exp = new Exp(constInitVal2.getConstExp().getAddExp());
+                            IrValue value1 = genExp(exp);
+                            IrStore irStore = new IrStore(value, value1);
+                            this.irInstructions.add(irStore);
+                            initVal_.add(value1);
                         }
                         initVal.add(initVal_);
                     }
@@ -179,13 +183,12 @@ public class IrInstructionBuilder {
                                 (valueType, name1, valueType, value, new IrIntType(32),
                                         new IrValue(String.valueOf(i)), new IrValue(String.valueOf(j)), false);
                         this.irInstructions.add(getElementPtr);
-                        IrStore irStore = new IrStore(getElementPtr,
-                                new IrValue(String.valueOf(initVal.get(i).get(j)), new IrIntType(32)));
+                        IrStore irStore = new IrStore(getElementPtr, initVal.get(i).get(j));
                         this.irInstructions.add(irStore);
                     }
                 }
                 /*---填入符号表---*/
-                Symbol symbol = new SymbolVar(constDef.getIdent().getVal(), constDef.getDimension(), value);
+                Symbol symbol = new SymbolCon(constDef.getIdent().getVal(), constDef.getDimension(), value);
                 this.symbolTable.addSymbol(symbol);
             }
         }
@@ -219,10 +222,14 @@ public class IrInstructionBuilder {
                 IrAlloca irAlloca = new IrAlloca(valueType, value);
                 this.irInstructions.add(irAlloca);
                 /*---赋值前先获取全部初始值---*/
-                ArrayList<Integer> initVal = new ArrayList<>();
+                ArrayList<IrValue> initVal = new ArrayList<>();
                 if (varDef.getInitVal() != null) {
                     for (InitVal initVal1 : varDef.getInitVal().getInitVals()) {
-                        initVal.add(initVal1.calculate(symbolTable));
+                        Exp exp = new Exp(initVal1.getExp().getAddExp());
+                        IrValue value1 = genExp(exp);
+                        IrStore irStore = new IrStore(value, value1);
+                        this.irInstructions.add(irStore);
+                        initVal.add(value1);
                     }
                 }
                 /*---获取数组地址，赋值---*/
@@ -231,8 +238,7 @@ public class IrInstructionBuilder {
                     IrGetElementPtr getElementPtr = new IrGetElementPtr
                             (valueType, name1, valueType, value, new IrIntType(32), new IrValue(String.valueOf(i)), false);
                     this.irInstructions.add(getElementPtr);
-                    IrStore irStore = new IrStore(getElementPtr,
-                            new IrValue(String.valueOf(initVal.get(i)), new IrIntType(32)));
+                    IrStore irStore = new IrStore(getElementPtr, initVal.get(i));
                     this.irInstructions.add(irStore);
 
                 }
@@ -244,18 +250,22 @@ public class IrInstructionBuilder {
                 /*---定义类型和值，并分配内存---*/
                 int eleNum1 = varDef.getConstExps().get(0).calculate(symbolTable);
                 int eleNum2 = varDef.getConstExps().get(1).calculate(symbolTable);
-                IrArrayType irArrayType = new IrArrayType(new IrIntType(32), eleNum1);
+                IrArrayType irArrayType = new IrArrayType(new IrIntType(32), eleNum2);
                 IrValueType valueType = new IrArrayType(irArrayType, eleNum1, eleNum2);
                 IrValue value = new IrValue(name, valueType);
                 IrAlloca irAlloca = new IrAlloca(valueType, value);
                 this.irInstructions.add(irAlloca);
                 /*---赋值前先获取全部初始值---*/
-                ArrayList<ArrayList<Integer>> initVal = new ArrayList<>();
+                ArrayList<ArrayList<IrValue>> initVal = new ArrayList<>();
                 if (varDef.getInitVal() != null) {
                     for (InitVal initVal1 : varDef.getInitVal().getInitVals()) {
-                        ArrayList<Integer> initVal_ = new ArrayList<>();
+                        ArrayList<IrValue> initVal_ = new ArrayList<>();
                         for (InitVal initVal2 : initVal1.getInitVals()) {
-                            initVal_.add(initVal2.calculate(symbolTable));
+                            Exp exp = new Exp(initVal2.getExp().getAddExp());
+                            IrValue value1 = genExp(exp);
+                            IrStore irStore = new IrStore(value, value1);
+                            this.irInstructions.add(irStore);
+                            initVal_.add(value1);
                         }
                         initVal.add(initVal_);
                     }
@@ -268,8 +278,7 @@ public class IrInstructionBuilder {
                                 (valueType, name1, valueType, value, new IrIntType(32),
                                         new IrValue(String.valueOf(i)), new IrValue(String.valueOf(j)), false);
                         this.irInstructions.add(getElementPtr);
-                        IrStore irStore = new IrStore(getElementPtr,
-                                new IrValue(String.valueOf(initVal.get(i).get(j)), new IrIntType(32)));
+                        IrStore irStore = new IrStore(getElementPtr, initVal.get(i).get(j));
                         this.irInstructions.add(irStore);
                     }
                 }

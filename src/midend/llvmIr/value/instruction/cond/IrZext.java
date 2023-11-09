@@ -13,6 +13,10 @@ public class IrZext extends IrInstruction {
         this.src = src;
     }
 
+    public IrValue getSrc() {
+        return src;
+    }
+
     //%32 = zext i1 %31 to i32
     @Override
     public String toString() {
