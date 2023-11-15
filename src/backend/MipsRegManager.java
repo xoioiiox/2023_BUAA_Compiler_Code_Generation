@@ -1,9 +1,6 @@
 package backend;
 
-import backend.BasicBlock.MipsBasicBlock;
 import backend.Insturction.*;
-import midend.symbol.Symbol;
-import midend.symbol.SymbolTable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +33,14 @@ public class MipsRegManager {
         for (int i = 0; i < 8; i++) {
             if (isUsed.get(i)) {
                 String name = reg_SymbolMap.get(i);
-                int offset = this.symbolTable.getOffset(name);
+                int offset;
+                if (this.symbolTable.getSymbolMap().containsKey(name)) {
+                    offset = this.symbolTable.getOffset(name);
+                }
+                else {
+                    offset = this.symbolTable.getOffset(null);
+                    this.symbolTable.getSymbolMap().put(name, offset);
+                }
                 Sw sw = new Sw(new MipsReg(8 + i), new MipsReg(30), offset);
                 mipsInstructions.add(sw);
                 isUsed.set(i, false);
@@ -67,7 +71,7 @@ public class MipsRegManager {
             mipsInstructions.add(li);
         }
         else {
-            int offset = this.symbolTable.getOffset(objectName);
+            int offset = this.symbolTable.getOffset(objectName); // 一定已经分配内存了！！
             Lw lw = new Lw(reg, new MipsReg(30), offset);
             mipsInstructions.add(lw);
         }
@@ -88,9 +92,7 @@ public class MipsRegManager {
                     if (i == ptr) {
                         ptr = (ptr + 1) % 8;
                     }
-                    int offset = this.symbolTable.getOffset(oldName);
-                    Sw sw = new Sw(new MipsReg(i + 8), new MipsReg(30), offset);
-                    mipsInstructions.add(sw);
+                    // 已经使用过的临时变量不需要写回
                     reg_SymbolMap.put(i, newName);
                     symbol_RegMap.remove(oldName);
                     symbol_RegMap.put(newName, new MipsReg(i + 8));
@@ -107,12 +109,19 @@ public class MipsRegManager {
             if (num == ptr) {
                 ptr = (ptr + 1) % 8;
             }
-            String replaceName = reg_SymbolMap.get(num);
-            int offset = this.symbolTable.getOffset(replaceName);
+            String oldName = reg_SymbolMap.get(num);
+            int offset;
+            if (this.symbolTable.getSymbolMap().containsKey(oldName)) {
+                offset = this.symbolTable.getOffset(oldName);
+            }
+            else {
+                offset = this.symbolTable.getOffset(null);
+                this.symbolTable.getSymbolMap().put(oldName, offset);
+            }
             Sw sw = new Sw(new MipsReg(num + 8), new MipsReg(30), offset);
             mipsInstructions.add(sw);
             reg_SymbolMap.put(num, newName);
-            symbol_RegMap.remove(replaceName);
+            symbol_RegMap.remove(oldName);
             symbol_RegMap.put(newName, new MipsReg(num + 8));
             return new MipsReg(num + 8);
         }
