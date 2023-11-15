@@ -19,22 +19,6 @@ public class Lw extends MipsInstruction {
         this.label = label;
     }
 
-    public MipsReg getDesReg() {
-        return desReg;
-    }
-
-    public MipsReg getBaseReg() {
-        return baseReg;
-    }
-
-    public int getOffset() {
-        return offset;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
     @Override
     public String toString() {
         if (label != null) {
