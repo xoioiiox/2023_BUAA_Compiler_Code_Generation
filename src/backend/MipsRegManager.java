@@ -45,6 +45,7 @@ public class MipsRegManager {
         this.symbol_RegMap = new HashMap<>();
         this.reg_SymbolMap = new HashMap<>();
         this.protectList = new ArrayList<>();
+        ptr = 0;
     }
 
     public void cleanProtectList() {
@@ -57,25 +58,15 @@ public class MipsRegManager {
 
     public MipsReg findReg(ArrayList<MipsInstruction> mipsInstructions, String objectName) {
         if (this.symbol_RegMap.containsKey(objectName)) {
-            //this.isArray.put(objectName, isArray);
             return symbol_RegMap.get(objectName);
         }
+        // 如果不在现有的寄存器中，那么分配一个寄存器，将其值从内存中调入
         MipsReg reg = getEmptyReg(mipsInstructions, objectName);
         if (isConst(objectName)) {
             Li li = new Li(reg, Integer.parseInt(objectName));
             mipsInstructions.add(li);
         }
-        /*else if (isGlobal(objectName)) {
-            if (isArray) {
-                La la = new La(reg, objectName.substring(1));
-                mipsInstructions.add(la);
-            }
-            else {
-                Lw lw = new Lw(reg, objectName.substring(1));
-                mipsInstructions.add(lw);
-            }
-        }*/
-        else { //todo 会出现多余的lw
+        else {
             int offset = this.symbolTable.getOffset(objectName);
             Lw lw = new Lw(reg, new MipsReg(30), offset);
             mipsInstructions.add(lw);
@@ -87,8 +78,6 @@ public class MipsRegManager {
         for (int i = 0; i < 8; i++) {
             if (!isUsed.get(i)) { // 有空闲寄存器直接分配
                 isUsed.set(i, true);
-                // 更新symbol
-                //this.isArray.put(newName, isArray);
                 reg_SymbolMap.put(i, newName);
                 symbol_RegMap.put(newName, new MipsReg(i + 8));
                 return new MipsReg(i + 8);
@@ -96,15 +85,12 @@ public class MipsRegManager {
             else {
                 String oldName = reg_SymbolMap.get(i);
                 if (symbolTable.isUsed(oldName) && !this.protectList.contains(i + 8)) {
-                    isUsed.set(i, true);
-                    // 更新symbol
                     if (i == ptr) {
                         ptr = (ptr + 1) % 8;
                     }
                     int offset = this.symbolTable.getOffset(oldName);
                     Sw sw = new Sw(new MipsReg(i + 8), new MipsReg(30), offset);
                     mipsInstructions.add(sw);
-                    //this.isArray.put(newName, isArray);
                     reg_SymbolMap.put(i, newName);
                     symbol_RegMap.remove(oldName);
                     symbol_RegMap.put(newName, new MipsReg(i + 8));
@@ -113,8 +99,8 @@ public class MipsRegManager {
             }
         }
         /* 没找到空闲寄存器，需要选择一个（最旧的）寄存器存入内存*/
-        for (int i = ptr; i < ptr + 8; i++) {
-            int num = i % 8;
+        for (int i = 0; i < 8; i++) {
+            int num = (i + ptr) % 8;
             if (protectList.contains(num + 8)) {
                 continue;
             }
@@ -122,12 +108,9 @@ public class MipsRegManager {
                 ptr = (ptr + 1) % 8;
             }
             String replaceName = reg_SymbolMap.get(num);
-            // 将symbol写回
             int offset = this.symbolTable.getOffset(replaceName);
             Sw sw = new Sw(new MipsReg(num + 8), new MipsReg(30), offset);
             mipsInstructions.add(sw);
-            // 更新symbol
-            //this.isArray.put(newName, isArray);
             reg_SymbolMap.put(num, newName);
             symbol_RegMap.remove(replaceName);
             symbol_RegMap.put(newName, new MipsReg(num + 8));
@@ -138,10 +121,6 @@ public class MipsRegManager {
 
     public boolean isConst(String name) {
         return !name.contains("@") && !name.contains("%");
-    }
-
-    public boolean isGlobal(String name) {
-        return name.contains("@");
     }
 
 }

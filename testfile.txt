@@ -1,9 +1,6 @@
+int a = 1;
 int main()
 {
-    int i;
-    for (i = 0; i < 3; i=i+1) {
-        {{break;}}
-    }
-    printf("%d", i);
+    a=a;
     return 0;
 }

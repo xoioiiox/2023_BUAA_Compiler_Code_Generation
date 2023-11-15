@@ -24,13 +24,12 @@ public class MipsFunctionBuilder {
     }
 
     public MipsFunction genMipsFunction() {
-        //todo head 加入符号表
         int paramNum = ((IrFunctionType)this.function.getValueType()).getParamTypes().size();
         for (int i = 0; i < paramNum; i++) {
             this.symbolTable.getSymbolMap().put(
                     ((IrFunctionType)this.function.getValueType()).getParamNames().get(i),
                     this.symbolTable.getOffset(null));
-            this.symbolTable.addNotTemp(((IrFunctionType)this.function.getValueType()).getParamNames().get(i)); //todo
+            this.symbolTable.addNotTemp(((IrFunctionType)this.function.getValueType()).getParamNames().get(i));
         }
         for (IrBasicBlock basicBlock : function.getBasicBlocks()) {
             MipsBasicBlockBuilder mipsBasicBlockBuilder

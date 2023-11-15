@@ -24,6 +24,7 @@ public class MipsSymbolTable {
         this.notTemp.add(name);
     }
 
+    // 这里的isTemp包括临时变量，常数，全局变量
     public boolean isTemp(String name) {
         return !this.notTemp.contains(name);
     }
