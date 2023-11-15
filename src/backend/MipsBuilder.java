@@ -18,7 +18,7 @@ public class MipsBuilder {
     private ArrayList<MipsGlobalVariable> mipsGlobalVariables;
     private ArrayList<MipsInstruction> mipsInstructions;
     private ArrayList<MipsFunction> mipsFunctions;
-    private MipsSymbolTable symbolTable;
+    //private MipsSymbolTable symbolTable;
     private static int offset = 0;
 
     public MipsBuilder(IrModule irModule) {
@@ -26,23 +26,20 @@ public class MipsBuilder {
         this.mipsGlobalVariables = new ArrayList<>();
         this.mipsInstructions = new ArrayList<>();
         this.mipsFunctions = new ArrayList<>();
-        this.symbolTable = new MipsSymbolTable(null, offset); //根符号表
+        //this.symbolTable = new MipsSymbolTable(null, offset); //根符号表
     }
 
     public MipsModule genMipsModule() {
-        int cnt = 0; //计算offset
-        //todo symbol table
         //global variable -> .data
         for (IrGlobalVariable globalVariable : this.irModule.getIrGlobalVariables()) {
             MipsGlobalVariable mipsGlobalVariable =
                     new MipsGlobalVariable(globalVariable.getName().substring(1), globalVariable);
             this.mipsGlobalVariables.add(mipsGlobalVariable);
-            cnt++;
         }
         // functions
         for (IrFunction function : this.irModule.getIrFunctions()) {
-            MipsSymbolTable symbolTable1 = new MipsSymbolTable(symbolTable, offset);
-            MipsFunctionBuilder mipsFunctionBuilder = new MipsFunctionBuilder(function, symbolTable1);
+            MipsSymbolTable symbolTable = new MipsSymbolTable(offset); // 对于每个函数都建一个符号表记录内存位置
+            MipsFunctionBuilder mipsFunctionBuilder = new MipsFunctionBuilder(function, symbolTable);
             this.mipsFunctions.add(mipsFunctionBuilder.genMipsFunction());
         }
         return new MipsModule(mipsGlobalVariables, mipsInstructions, mipsFunctions);

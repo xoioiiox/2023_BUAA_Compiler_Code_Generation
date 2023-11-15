@@ -9,11 +9,9 @@ public class MipsSymbolTable {
     private ArrayList<String> isUsed;
     private ArrayList<String> notTemp;
     private ArrayList<String> specialBase;
-    private MipsSymbolTable prev;
 
-    public MipsSymbolTable(MipsSymbolTable prev, int sumOffset) {
+    public MipsSymbolTable(int sumOffset) {
         MipsSymbolTable.sumOffset = sumOffset;
-        this.prev = prev;
         this.symbolMap = new HashMap<>();
         this.isUsed = new ArrayList<>();
         this.notTemp = new ArrayList<>();
@@ -54,12 +52,9 @@ public class MipsSymbolTable {
             return this.symbolMap.get(name);
         }
         else {
-            if (prev == null) {
-                int res = sumOffset;
-                sumOffset += 4;
-                return res;
-            }
-            return this.prev.getOffset(name);
+            int res = sumOffset;
+            sumOffset += 4;
+            return res;
         }
     }
 
