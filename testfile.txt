@@ -1,11 +1,9 @@
-int x;
-
-void func(int a) {
-    x = a;
-}
-
-int main() {
-    func(5);
-    printf("%d", x);
+int main()
+{
+    int i;
+    for (i = 0; i < 3; i=i+1) {
+        {{break;}}
+    }
+    printf("%d", i);
     return 0;
 }

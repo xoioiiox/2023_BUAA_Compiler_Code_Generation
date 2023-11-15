@@ -159,10 +159,9 @@ public class IrBasicBlockBuilder {
         Cond cond = stmtIf.getCond();
         // cond分析
         ArrayList<ArrayList<IrBasicBlock>> blocks = genCond(cond);
-        // 分析if-stmt
         Stmt ifStmt = stmtIf.getStmtIf();
         Stmt elseStmt = stmtIf.getStmtElse();
-        //gen
+        // 分析if-stmt
         ArrayList<BlockItem> blockItems = new ArrayList<>();
         blockItems.add(new BlockItem(ifStmt));
         Block block1 = new Block(blockItems);

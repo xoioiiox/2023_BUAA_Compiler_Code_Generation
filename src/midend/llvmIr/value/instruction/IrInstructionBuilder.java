@@ -132,8 +132,8 @@ public class IrInstructionBuilder {
                     for (ConstInitVal constInitVal : constDef.getConstInitVal().getConstInitVals()) {
                         Exp exp = new Exp(constInitVal.getConstExp().getAddExp());
                         IrValue value1 = genExp(exp);
-                        IrStore irStore = new IrStore(value, value1);
-                        this.irInstructions.add(irStore);
+                        //IrStore irStore = new IrStore(value, value1);
+                        //this.irInstructions.add(irStore);
                         initVal.add(value1);
                     }
                 }
@@ -168,8 +168,8 @@ public class IrInstructionBuilder {
                         for (ConstInitVal constInitVal2 : constInitVal.getConstInitVals()) {
                             Exp exp = new Exp(constInitVal2.getConstExp().getAddExp());
                             IrValue value1 = genExp(exp);
-                            IrStore irStore = new IrStore(value, value1);
-                            this.irInstructions.add(irStore);
+                            //IrStore irStore = new IrStore(value, value1);
+                            //this.irInstructions.add(irStore);
                             initVal_.add(value1);
                         }
                         initVal.add(initVal_);
@@ -227,8 +227,8 @@ public class IrInstructionBuilder {
                     for (InitVal initVal1 : varDef.getInitVal().getInitVals()) {
                         Exp exp = new Exp(initVal1.getExp().getAddExp());
                         IrValue value1 = genExp(exp);
-                        IrStore irStore = new IrStore(value, value1);
-                        this.irInstructions.add(irStore);
+                        //IrStore irStore = new IrStore(value, value1);
+                        //this.irInstructions.add(irStore);
                         initVal.add(value1);
                     }
                 }
@@ -263,8 +263,8 @@ public class IrInstructionBuilder {
                         for (InitVal initVal2 : initVal1.getInitVals()) {
                             Exp exp = new Exp(initVal2.getExp().getAddExp());
                             IrValue value1 = genExp(exp);
-                            IrStore irStore = new IrStore(value, value1);
-                            this.irInstructions.add(irStore);
+                            //IrStore irStore = new IrStore(value, value1);
+                            //this.irInstructions.add(irStore);
                             initVal_.add(value1);
                         }
                         initVal.add(initVal_);

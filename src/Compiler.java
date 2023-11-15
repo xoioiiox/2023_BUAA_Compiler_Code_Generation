@@ -1,5 +1,7 @@
 import backend.MipsBuilder;
 import backend.MipsModule;
+import frontend.io.ParserOutput;
+import midend.error.ErrorTable;
 import midend.llvmIr.IrModule;
 import midend.symbol.SymbolTable;
 import frontend.lexer.Lexer;
@@ -28,6 +30,24 @@ public class Compiler {
         /*-------------语法分析--------------*/
         CompUnit compUnit = new CompUnit(iterator, symbolTable);
         compUnit.parseCompUnit();
+        /*try {
+            PrintStream printStream = new PrintStream("output.txt");
+            System.setOut(printStream); //将sout重定向到文件输出
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }*/
+        //ParserOutput.Print();
+        /*-------------错误处理--------------*/
+        /*try {
+            PrintStream printStream = new PrintStream("error.txt");
+            System.setOut(printStream); //将sout重定向到文件输出
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        ErrorTable.outPut();
+        if (!ErrorTable.isEmpty()) { // 若程序错误则提前结束编译
+            return;
+        }*/
         /*-------------中间代码--------------*/
         try {
             PrintStream printStream = new PrintStream("llvm_ir.txt");
@@ -48,14 +68,5 @@ public class Compiler {
         MipsBuilder mipsBuilder = new MipsBuilder(irModule);
         MipsModule mipsModule = mipsBuilder.genMipsModule();
         mipsModule.printMips();
-        /*-------------控制输出--------------*/
-        /*try {
-            PrintStream printStream = new PrintStream("error.txt");
-            System.setOut(printStream); //将sout重定向到文件输出
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }*/
-        //ErrorTable.outPut();
-        //ParserOutput.Print();
     }
 }

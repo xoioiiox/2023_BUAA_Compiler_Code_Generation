@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MipsSymbolTable {
-    private MipsCnt mipsCnt;
     private static int sumOffset;
     private HashMap<String, Integer> symbolMap;
+    private ArrayList<String> isUsed;
+    private ArrayList<String> notTemp;
     private ArrayList<String> specialBase;
     private MipsSymbolTable prev;
 
@@ -14,7 +15,25 @@ public class MipsSymbolTable {
         MipsSymbolTable.sumOffset = sumOffset;
         this.prev = prev;
         this.symbolMap = new HashMap<>();
+        this.isUsed = new ArrayList<>();
+        this.notTemp = new ArrayList<>();
         this.specialBase = new ArrayList<>();
+    }
+
+    public void addNotTemp(String name) {
+        this.notTemp.add(name);
+    }
+
+    public boolean isTemp(String name) {
+        return !this.notTemp.contains(name);
+    }
+
+    public void addUsed(String name) {
+        this.isUsed.add(name);
+    }
+
+    public boolean isUsed(String name) {
+        return isUsed.contains(name);
     }
 
     public void addSpecialBase(String name) {

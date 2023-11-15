@@ -7,6 +7,10 @@ public class MipsReg {
         this.regNum = regNum;
     }
 
+    public int getRegNum() {
+        return regNum;
+    }
+
     @Override
     public String toString() {
         String s = null;

@@ -16,4 +16,8 @@ public class ErrorTable {
             System.out.println(error.lineNum + " " + error.errorType);
         }
     }
+
+    public static boolean isEmpty() {
+        return errors.isEmpty();
+    }
 }

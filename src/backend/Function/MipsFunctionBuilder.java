@@ -2,6 +2,7 @@ package backend.Function;
 
 import backend.BasicBlock.MipsBasicBlock;
 import backend.BasicBlock.MipsBasicBlockBuilder;
+import backend.MipsRegManager;
 import backend.MipsSymbolTable;
 import midend.llvmIr.type.IrFunctionType;
 import midend.llvmIr.value.basicBlock.IrBasicBlock;
@@ -13,11 +14,13 @@ public class MipsFunctionBuilder {
     private IrFunction function;
     private ArrayList<MipsBasicBlock> mipsBasicBlocks;
     private MipsSymbolTable symbolTable;
+    private MipsRegManager mipsRegManager;
 
     public MipsFunctionBuilder(IrFunction function, MipsSymbolTable symbolTable) {
         this.function = function;
         this.mipsBasicBlocks = new ArrayList<>();
         this.symbolTable = symbolTable;
+        this.mipsRegManager = new MipsRegManager(symbolTable);
     }
 
     public MipsFunction genMipsFunction() {
@@ -27,10 +30,11 @@ public class MipsFunctionBuilder {
             this.symbolTable.getSymbolMap().put(
                     ((IrFunctionType)this.function.getValueType()).getParamNames().get(i),
                     this.symbolTable.getOffset(null));
+            this.symbolTable.addNotTemp(((IrFunctionType)this.function.getValueType()).getParamNames().get(i)); //todo
         }
         for (IrBasicBlock basicBlock : function.getBasicBlocks()) {
             MipsBasicBlockBuilder mipsBasicBlockBuilder
-                    = new MipsBasicBlockBuilder(basicBlock, symbolTable, this.function.isMainFunc());
+                    = new MipsBasicBlockBuilder(basicBlock, symbolTable, this.function.isMainFunc(), mipsRegManager);
             this.mipsBasicBlocks.add(mipsBasicBlockBuilder.genMipsBasicBlock());
         }
         MipsFunction mipsFunction = new MipsFunction(
