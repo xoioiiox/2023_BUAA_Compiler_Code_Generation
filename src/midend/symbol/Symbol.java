@@ -6,7 +6,6 @@ public class Symbol {
     private String name;
     private int lineNum;
     private IrValue value;
-    private boolean isUsed;
 
     //语法分析
     public Symbol(String name, int lineNum) {
@@ -18,14 +17,6 @@ public class Symbol {
     public Symbol(String name, IrValue value) {
         this.name = name;
         this.value = value;
-    }
-
-    public void setUsed(boolean used) {
-        isUsed = used;
-    }
-
-    public boolean isUsed() {
-        return isUsed;
     }
 
     public IrValue getValue() {

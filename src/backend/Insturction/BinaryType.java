@@ -3,7 +3,7 @@ package backend.Insturction;
 public enum BinaryType {
     addu,
     subu,
-    mulu,
+    mul,
     div, // div + mflo
     mod // div + mfhi
 }

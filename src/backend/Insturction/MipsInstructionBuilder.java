@@ -21,7 +21,6 @@ import midend.llvmIr.value.instruction.terminator.IrCall;
 import midend.llvmIr.value.instruction.terminator.IrRet;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class MipsInstructionBuilder {
     private IrInstruction instruction;
@@ -76,13 +75,13 @@ public class MipsInstructionBuilder {
 
     public void genMipsZext() {
         IrZext irZext = (IrZext) this.instruction;
-        MipsReg srcReg = mipsRegManager.findReg(mipsInstructions, irZext.getSrc().getName());
+        MipsReg srcReg = getMipsReg(irZext.getSrc().getName(), new MipsReg(16));
+        mipsRegManager.addProtectList(srcReg.getRegNum());
         MipsReg desReg = mipsRegManager.getEmptyReg(mipsInstructions, irZext.getName());
         Move move = new Move(desReg, srcReg);
         this.mipsInstructions.add(move);
         symbolTable.addUsed(irZext.getSrc().getName());
-        //int offset = this.symbolTable.getOffset(null);
-        //this.symbolTable.getSymbolMap().put(irZext.getName(), offset);
+        mipsRegManager.cleanProtectList();
     }
 
     //%19 = icmp ne i32 0, %18
@@ -91,45 +90,17 @@ public class MipsInstructionBuilder {
         IrValue value1 = icmp.getOperand(0);
         IrValue value2 = icmp.getOperand(1);
         // reg处理分配
-        MipsReg reg_rs;
-        MipsReg reg_rt;
-        if (isConst(value1.getName())) {
-            Li li = new Li(new MipsReg(16), Integer.parseInt(value1.getName()));
-            this.mipsInstructions.add(li);
-            reg_rs = new MipsReg(16);
-        }
-        else if (symbolTable.isTemp(value1.getName())) {
-            reg_rs = this.mipsRegManager.findReg(this.mipsInstructions, value1.getName());
-            mipsRegManager.addProtectList(reg_rs.getRegNum());
-        }
-        else {
-            Lw lw = new Lw(new MipsReg(16), new MipsReg(30), symbolTable.getOffset(value1.getName()));
-            this.mipsInstructions.add(lw);
-            reg_rs = new MipsReg(16);
-        }
-        if (isConst(value2.getName())) {
-            Li li = new Li(new MipsReg(17), Integer.parseInt(value2.getName()));
-            this.mipsInstructions.add(li);
-            reg_rt = new MipsReg(17);
-        }
-        else if (symbolTable.isTemp(value2.getName())) {
-            reg_rt = this.mipsRegManager.findReg(this.mipsInstructions, value2.getName());
-            mipsRegManager.addProtectList(reg_rt.getRegNum());
-        }
-        else {
-            Lw lw = new Lw(new MipsReg(17), new MipsReg(30), symbolTable.getOffset(value2.getName()));
-            this.mipsInstructions.add(lw);
-            reg_rt = new MipsReg(17);
-        }
-        this.symbolTable.addUsed(value1.getName());
-        this.symbolTable.addUsed(value2.getName());
+        MipsReg reg_rs = getMipsReg(value1.getName(), new MipsReg(16));
+        mipsRegManager.addProtectList(reg_rs.getRegNum());
+        MipsReg reg_rt = getMipsReg(value2.getName(), new MipsReg(17));
+        mipsRegManager.addProtectList(reg_rt.getRegNum());
         MipsReg reg_rd = this.mipsRegManager.getEmptyReg(this.mipsInstructions, icmp.getName());
         // 指令生成
         SCmpType type = getType(icmp.getType());
         SCmp sCmp = new SCmp(type, reg_rd, reg_rs, reg_rt);
         this.mipsInstructions.add(sCmp);
-        //int offset = this.symbolTable.getOffset(null);
-        //this.symbolTable.getSymbolMap().put(icmp.getName(), offset);
+        this.symbolTable.addUsed(value1.getName());
+        this.symbolTable.addUsed(value2.getName());
         mipsRegManager.cleanProtectList();
     }
 
@@ -167,8 +138,8 @@ public class MipsInstructionBuilder {
                 this.mipsInstructions.add(lw);
             } else { //局部数组
                 int offset = symbolTable.getOffset(name);
-                Addi addi = new Addi(new MipsReg(16), new MipsReg(30), offset);
-                this.mipsInstructions.add(addi);
+                Addiu addiu = new Addiu(new MipsReg(16), new MipsReg(30), offset);
+                this.mipsInstructions.add(addiu);
             }
             firstAddrReg = new MipsReg(16);
         }
@@ -178,15 +149,7 @@ public class MipsInstructionBuilder {
         if (getElementPtr.getIndex() != null) { //一维a[]->a 或二维b[][]->b[1]
             IrValue value = getElementPtr.getIndex();
             // 由llvm特性，这里的index一定为临时变量
-            MipsReg index;
-            if (isConst(value.getName())) {
-                Li li = new Li(new MipsReg(17), Integer.parseInt(value.getName()));
-                this.mipsInstructions.add(li);
-                index = new MipsReg(17);
-            }
-            else {
-                index = this.mipsRegManager.findReg(mipsInstructions, value.getName());
-            }
+            MipsReg index = getMipsReg(value.getName(), new MipsReg(17));
             mipsRegManager.addProtectList(index.getRegNum());
 
             IrValueType valueType = getElementPtr.getBaseType();
@@ -203,7 +166,7 @@ public class MipsInstructionBuilder {
                 MipsReg mulNumReg = this.mipsRegManager.getEmptyReg(mipsInstructions, "temp1");
                 Li li = new Li(mulNumReg, elementNum);
                 this.mipsInstructions.add(li);
-                Binary binary = new Binary(BinaryType.mulu, offsetReg, index, mulNumReg);
+                Binary binary = new Binary(BinaryType.mul, offsetReg, index, mulNumReg);
                 this.mipsInstructions.add(binary);
                 this.symbolTable.addUsed("temp1");
             }
@@ -212,7 +175,8 @@ public class MipsInstructionBuilder {
                 this.mipsInstructions.add(move);
             }
             this.symbolTable.addUsed(value.getName());
-        } else { //一定是二维
+        }
+        else { //一定是二维
             int elementNum2 = 0;
             if (getElementPtr.getBaseType() instanceof IrArrayType) {
                 IrArrayType irArrayType = (IrArrayType) getElementPtr.getBaseType();
@@ -225,26 +189,10 @@ public class MipsInstructionBuilder {
 
             IrValue value1 = getElementPtr.getIndex1();
             IrValue value2 = getElementPtr.getIndex2();
-            MipsReg index1;
-            MipsReg index2;
-            if (isConst(value1.getName())) {
-                Li li = new Li(new MipsReg(17), Integer.parseInt(value1.getName()));
-                this.mipsInstructions.add(li);
-                index1 = new MipsReg(17);
-            }
-            else {
-                index1 = this.mipsRegManager.findReg(mipsInstructions, value1.getName());
-                mipsRegManager.addProtectList(index1.getRegNum());
-            }
-            if (isConst(value2.getName())) {
-                Li li = new Li(new MipsReg(18), Integer.parseInt(value2.getName()));
-                this.mipsInstructions.add(li);
-                index2 = new MipsReg(18);
-            }
-            else {
-                index2 = this.mipsRegManager.findReg(mipsInstructions, value2.getName());
-                mipsRegManager.addProtectList(index2.getRegNum());
-            }
+            MipsReg index1 = getMipsReg(value1.getName(), new MipsReg(17));
+            mipsRegManager.addProtectList(index1.getRegNum());
+            MipsReg index2 = getMipsReg(value2.getName(), new MipsReg(18));
+            mipsRegManager.addProtectList(index2.getRegNum());
 
             MipsReg mulNumReg = this.mipsRegManager.getEmptyReg(mipsInstructions, "temp1");
             mipsRegManager.addProtectList(mulNumReg.getRegNum());
@@ -252,7 +200,7 @@ public class MipsInstructionBuilder {
             this.mipsInstructions.add(li);
 
             MipsReg mulResReg = this.mipsRegManager.getEmptyReg(mipsInstructions, "temp2");
-            Binary binary = new Binary(BinaryType.mulu, mulResReg, index1, mulNumReg);
+            Binary binary = new Binary(BinaryType.mul, mulResReg, index1, mulNumReg);
             this.mipsInstructions.add(binary);
             Binary binary1 = new Binary(BinaryType.addu, offsetReg, mulResReg, index2);
             this.mipsInstructions.add(binary1);
@@ -261,7 +209,6 @@ public class MipsInstructionBuilder {
             this.symbolTable.addUsed(value1.getName());
             this.symbolTable.addUsed(value2.getName());
         }
-        this.symbolTable.addUsed("temp");
         /*------计算绝对位置------*/
         Sll sll = new Sll(offsetReg, offsetReg, 2);
         this.mipsInstructions.add(sll);
@@ -269,13 +216,8 @@ public class MipsInstructionBuilder {
         MipsReg addrReg = this.mipsRegManager.getEmptyReg(mipsInstructions, getElementPtr.getName());
         Binary binary = new Binary(BinaryType.addu, addrReg, firstAddrReg, offsetReg);
         this.mipsInstructions.add(binary);
+        this.symbolTable.addUsed("temp");
 
-        /*MipsReg resReg = mipsRegManager.getEmptyReg(mipsInstructions, getElementPtr.getName());
-        Move move = new Move(resReg, addrReg);
-        this.mipsInstructions.add(move);*/
-
-        //int offset = this.symbolTable.getOffset(null);
-        //symbolTable.getSymbolMap().put(getElementPtr.getName(), offset);
         symbolTable.addSpecialBase(getElementPtr.getName());
         mipsRegManager.cleanProtectList();
     }
@@ -297,7 +239,7 @@ public class MipsInstructionBuilder {
         String name = irAlloca.getValue().getName();
         this.symbolTable.addNotTemp(name); // 在allocate时记录其为非临时变量
         this.symbolTable.getSymbolMap().put(name, this.symbolTable.getOffset(null));
-        this.symbolTable.changeOffset(4 * num);
+        this.symbolTable.changeOffset(4 * num); // 是不是多加了一个？
     }
 
     public void genMipsBinaryInst() {
@@ -306,42 +248,15 @@ public class MipsInstructionBuilder {
         String rdName = irBinaryInst.getName();
         String rsName = irBinaryInst.getOperand(0).getName();
         String rtName = irBinaryInst.getOperand(1).getName();
-        MipsReg rsReg;
-        MipsReg rtReg;
-        MipsReg rdReg = mipsRegManager.getEmptyReg(mipsInstructions, rdName);
-        mipsRegManager.addProtectList(rdReg.getRegNum());
 
-        if (isConst(rsName)) {
-            Li li = new Li(new MipsReg(17), Integer.parseInt(rsName));
-            this.mipsInstructions.add(li);
-            rsReg = new MipsReg(17);
-        }
-        else if (symbolTable.isTemp(rsName)) {
-            rsReg = mipsRegManager.findReg(mipsInstructions, rsName);
-            mipsRegManager.addProtectList(rsReg.getRegNum());
-        }
-        else {
-            Lw lw = new Lw(new MipsReg(17), new MipsReg(30), symbolTable.getOffset(rsName));
-            this.mipsInstructions.add(lw);
-            rsReg = new MipsReg(17);
-        }
-        if (isConst(rtName)) {
-            Li li = new Li(new MipsReg(18), Integer.parseInt(rtName));
-            this.mipsInstructions.add(li);
-            rtReg = new MipsReg(18);
-        }
-        else if (symbolTable.isTemp(rtName)) {
-            rtReg = mipsRegManager.findReg(mipsInstructions, rtName);
-            mipsRegManager.addProtectList(rtReg.getRegNum());
-        }
-        else {
-            Lw lw = new Lw(new MipsReg(18), new MipsReg(30), symbolTable.getOffset(rtName));
-            this.mipsInstructions.add(lw);
-            rtReg = new MipsReg(18);
-        }
+        MipsReg rsReg = getMipsReg(rsName, new MipsReg(16));
+        mipsRegManager.addProtectList(rsReg.getRegNum());
+        MipsReg rtReg = getMipsReg(rtName, new MipsReg(17));
+        mipsRegManager.addProtectList(rtReg.getRegNum());
+        MipsReg rdReg = mipsRegManager.getEmptyReg(mipsInstructions, rdName);
         /*------生成指令(add sub...)------*/
         BinaryType binaryType = getBinaryType(irBinaryInst.getType());
-        if (binaryType == BinaryType.addu || binaryType == BinaryType.subu || binaryType == BinaryType.mulu) {
+        if (binaryType == BinaryType.addu || binaryType == BinaryType.subu || binaryType == BinaryType.mul) {
             Binary binary = new Binary(binaryType, rdReg, rsReg, rtReg);
             this.mipsInstructions.add(binary);
         } else if (binaryType == BinaryType.div) {
@@ -357,8 +272,6 @@ public class MipsInstructionBuilder {
         }
         this.symbolTable.addUsed(rsName); //若非临时变量 则不会发生对于该符号的查询
         this.symbolTable.addUsed(rtName);
-        //int rdOffset = this.symbolTable.getOffset(null);
-        //this.symbolTable.getSymbolMap().put(rdName, rdOffset); // todo 需要放在末尾吗？
         mipsRegManager.cleanProtectList();
     }
 
@@ -367,10 +280,9 @@ public class MipsInstructionBuilder {
         switch(type) {
             case add: binaryType = BinaryType.addu; break;
             case sub: binaryType = BinaryType.subu; break;
-            case mul: binaryType = BinaryType.mulu; break;
+            case mul: binaryType = BinaryType.mul; break;
             case sdiv: binaryType = BinaryType.div; break;
             case srem: binaryType = BinaryType.mod; break;
-            //todo
         }
         return binaryType;
     }
@@ -381,10 +293,10 @@ public class MipsInstructionBuilder {
         IrValue value = irBr.getCond();
         if (value != null) {
             // 一定是临时变量
-            MipsReg condReg = mipsRegManager.findReg(mipsInstructions, value.getName());
+            MipsReg condReg = getMipsReg(value.getName(), new MipsReg(16));
             String trueLabel = irBr.getTrueLabel();
             String falseLabel = irBr.getFalseLabel();
-            Beq beq = new Beq(condReg, 1, trueLabel);
+            Beq beq = new Beq(condReg, 1, trueLabel); // if (2) todo ?
             this.mipsInstructions.add(beq);
             J j = new J(falseLabel);
             this.mipsInstructions.add(j);
@@ -425,17 +337,10 @@ public class MipsInstructionBuilder {
         Li li = new Li(new MipsReg(2), 1);
         this.mipsInstructions.add(li);
         String name = irCall.getValue().getName();
-        MipsReg srcReg;
-        if (isConst(name)) {
-            Li li1 = new Li(new MipsReg(16), Integer.parseInt(name));
-            this.mipsInstructions.add(li1);
-            srcReg = new MipsReg(16);
-        }
-        else {
-            srcReg = mipsRegManager.findReg(mipsInstructions, name);
-        }
+        MipsReg srcReg = getMipsReg(name, new MipsReg(16));
         Move move = new Move(new MipsReg(4), srcReg);
         this.mipsInstructions.add(move);
+        this.symbolTable.addUsed(name);
         Syscall syscall = new Syscall();
         this.mipsInstructions.add(syscall);
     }
@@ -445,9 +350,6 @@ public class MipsInstructionBuilder {
         this.mipsInstructions.add(li);
         Syscall syscall = new Syscall();
         this.mipsInstructions.add(syscall);
-        //int offset_l = this.symbolTable.getOffset(null);
-        //this.symbolTable.getSymbolMap().put(irCall.getName(), offset_l);
-        // 一定是临时变量
         MipsReg reg = mipsRegManager.getEmptyReg(mipsInstructions, irCall.getName());
         Move move = new Move(reg, new MipsReg(2));
         this.mipsInstructions.add(move);
@@ -457,8 +359,8 @@ public class MipsInstructionBuilder {
         // 保存$ra，防止覆盖
         Sw sw = new Sw(new MipsReg(31), new MipsReg(29), 0);
         this.mipsInstructions.add(sw);
-        Addi addi = new Addi(new MipsReg(29), new MipsReg(29), -4);
-        this.mipsInstructions.add(addi);
+        Addiu addiu = new Addiu(new MipsReg(29), new MipsReg(29), -4);
+        this.mipsInstructions.add(addiu);
         // 保存寄存器值
         this.mipsRegManager.restore(this.mipsInstructions);
         // 获取fp指针当前偏移量
@@ -469,36 +371,25 @@ public class MipsInstructionBuilder {
         for (int i = 0; i < paramNum; i++) {
             IrValue param = irCall.getOperand(i + 1);
             // 一定是临时变量
-            MipsReg paramReg;
-            if (isConst(param.getName())) {
-                Li li = new Li(new MipsReg(16), Integer.parseInt(param.getName()));
-                this.mipsInstructions.add(li);
-                paramReg = new MipsReg(16);
-            }
-            else {
-                paramReg = mipsRegManager.findReg(mipsInstructions, param.getName());
-            }
+            MipsReg paramReg = getMipsReg(param.getName(), new MipsReg(16));
             Sw sw1 = new Sw(paramReg, new MipsReg(30), this.symbolTable.getOffset(null));
             this.mipsInstructions.add(sw1);
+            symbolTable.addUsed(param.getName());
         }
         // 调整fp指针位置
-        Addi addi1 = new Addi(new MipsReg(30), new MipsReg(30), fpOffset);
-        this.mipsInstructions.add(addi1);
+        Addiu addiu1 = new Addiu(new MipsReg(30), new MipsReg(30), fpOffset);
+        this.mipsInstructions.add(addiu1);
         // 调用函数
         Jal jal = new Jal(irFunction.getName().substring(1));
         this.mipsInstructions.add(jal);
         // 恢复现场
-        Addi addi3 = new Addi(new MipsReg(30), new MipsReg(30), -1 * fpOffset);
-        this.mipsInstructions.add(addi3);
-        Addi addi2 = new Addi(new MipsReg(29), new MipsReg(29), 4);
-        this.mipsInstructions.add(addi2);
+        Addiu addiu3 = new Addiu(new MipsReg(30), new MipsReg(30), -1 * fpOffset);
+        this.mipsInstructions.add(addiu3);
+        Addiu addiu2 = new Addiu(new MipsReg(29), new MipsReg(29), 4);
+        this.mipsInstructions.add(addiu2);
         Lw lw = new Lw(new MipsReg(31), new MipsReg(29), 0);
         this.mipsInstructions.add(lw);
         if (irCall.isHasExpReturn()) {
-            // 临时变量之前没加入过符号表
-            //int offset_l = this.symbolTable.getOffset(null);
-            //this.symbolTable.getSymbolMap().put(irCall.getName(), offset_l);
-            // 一定是临时变量
             MipsReg resReg = mipsRegManager.getEmptyReg(mipsInstructions, irCall.getName());
             Move move = new Move(resReg, new MipsReg(2));
             this.mipsInstructions.add(move);
@@ -517,17 +408,10 @@ public class MipsInstructionBuilder {
         IrRet irRet = (IrRet) this.instruction;
         if (irRet.isHasReturnExp()) { //有返回值
             String retName = irRet.getName();
-            MipsReg retReg;
-            if (isConst(retName)) {
-                Li li = new Li(new MipsReg(16), Integer.parseInt(retName));
-                this.mipsInstructions.add(li);
-                retReg = new MipsReg(16);
-            }
-            else {
-                retReg = mipsRegManager.findReg(mipsInstructions, retName);
-            }
+            MipsReg retReg = getMipsReg(retName, new MipsReg(16));
             Move move = new Move(new MipsReg(2), retReg);
             this.mipsInstructions.add(move);
+            symbolTable.addUsed(retName);
             // 跳转语句
             if (isMainFunc) {
                 Li li = new Li(new MipsReg(2), 10);
@@ -556,7 +440,7 @@ public class MipsInstructionBuilder {
         if (symbolTable.getSpecialBase().contains(srcName)) { // 从该地址获取数值
             // 一定是临时变量
             MipsReg srcReg = mipsRegManager.findReg(mipsInstructions, srcName);
-            if(irLoad.getValue().getValueType() instanceof IrIntType) {
+            if(irLoad.getValue().getValueType() instanceof IrIntType) { //todo when?
                 Lw lw = new Lw(desReg, srcReg, 0);
                 this.mipsInstructions.add(lw);
             }
@@ -597,15 +481,12 @@ public class MipsInstructionBuilder {
                 }
                 else { //局部数组
                     int offset_src = this.symbolTable.getOffset(srcName);
-                    Addi addi = new Addi(desReg, new MipsReg(30), offset_src);
-                    this.mipsInstructions.add(addi);
+                    Addiu addiu = new Addiu(desReg, new MipsReg(30), offset_src);
+                    this.mipsInstructions.add(addiu);
                 }
             }
         }
         this.symbolTable.addUsed(srcName);
-        //新建符号（对应左值），存入取得值
-        //int offset_des = this.symbolTable.getOffset(null);
-        //this.symbolTable.getSymbolMap().put(irLoad.getName(), offset_des);
         mipsRegManager.cleanProtectList();
     }
 
@@ -613,16 +494,7 @@ public class MipsInstructionBuilder {
         IrStore irStore = (IrStore) this.instruction;
         String srcName = irStore.getRightOp().getName();
         String desName = irStore.getLeftOp().getName();
-        // 一定是临时变量
-        MipsReg srcReg;
-        if (isConst(srcName)) {
-            Li li = new Li(new MipsReg(16), Integer.parseInt(srcName));
-            this.mipsInstructions.add(li);
-            srcReg = new MipsReg(16);
-        }
-        else {
-            srcReg = mipsRegManager.findReg(mipsInstructions, srcName);
-        }
+        MipsReg srcReg = getMipsReg(srcName, new MipsReg(16));
         mipsRegManager.addProtectList(srcReg.getRegNum());
         if (symbolTable.getSpecialBase().contains(desName)) { // 对数组赋值
             MipsReg desReg = mipsRegManager.findReg(mipsInstructions, desName);
@@ -644,6 +516,7 @@ public class MipsInstructionBuilder {
                 this.mipsInstructions.add(sw);
             }
         }
+        symbolTable.addUsed(srcName);
         mipsRegManager.cleanProtectList();
     }
 
@@ -653,5 +526,26 @@ public class MipsInstructionBuilder {
 
     public boolean isGlobal(String name) {
         return name.contains("@");
+    }
+
+    public MipsReg getMipsReg(String name, MipsReg reg) {
+        if (isConst(name)) {
+            Li li = new Li(reg, Integer.parseInt(name));
+            this.mipsInstructions.add(li);
+            return reg;
+        }
+        else if (isGlobal(name)) { //全局数组会单独考虑到
+            Lw lw = new Lw(reg, name.substring(1));
+            this.mipsInstructions.add(lw);
+            return reg;
+        }
+        else if (symbolTable.isTemp(name)) {
+            return mipsRegManager.findReg(mipsInstructions, name);
+        }
+        else {
+            Lw lw = new Lw(reg, new MipsReg(30), symbolTable.getOffset(name));
+            this.mipsInstructions.add(lw);
+            return reg;
+        }
     }
 }

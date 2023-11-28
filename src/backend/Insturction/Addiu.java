@@ -2,12 +2,12 @@ package backend.Insturction;
 
 import backend.MipsReg;
 
-public class Addi extends MipsInstruction {
+public class Addiu extends MipsInstruction {
     private MipsReg rd;
     private MipsReg rt;
     private int immediate;
 
-    public Addi(MipsReg rd, MipsReg rt, int immediate) {
+    public Addiu(MipsReg rd, MipsReg rt, int immediate) {
         this.rd = rd;
         this.rt = rt;
         this.immediate = immediate;
@@ -15,6 +15,6 @@ public class Addi extends MipsInstruction {
 
     @Override
     public String toString() {
-        return "addi " + rd.toString() + ", " + rt.toString() + ", " + immediate;
+        return "addiu " + rd.toString() + ", " + rt.toString() + ", " + immediate;
     }
 }

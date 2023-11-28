@@ -159,9 +159,10 @@ public class IrBasicBlockBuilder {
         Cond cond = stmtIf.getCond();
         // cond分析
         ArrayList<ArrayList<IrBasicBlock>> blocks = genCond(cond);
+        // 分析if-stmt
         Stmt ifStmt = stmtIf.getStmtIf();
         Stmt elseStmt = stmtIf.getStmtElse();
-        // 分析if-stmt
+        //gen
         ArrayList<BlockItem> blockItems = new ArrayList<>();
         blockItems.add(new BlockItem(ifStmt));
         Block block1 = new Block(blockItems);
@@ -170,12 +171,11 @@ public class IrBasicBlockBuilder {
         this.basicBlocks.addAll(irBasicBlocks);
         this.breaks.addAll(irBasicBlockBuilder.getBreaks());
         this.continues.addAll(irBasicBlockBuilder.getContinues());
-        IrBr brIfEnd = null;
-        if (irBasicBlocks.size() != 0) { //todo 需要else吗？
-            IrBasicBlock lastBlock = irBasicBlocks.get(irBasicBlocks.size() - 1);
-            brIfEnd = new IrBr("#");
-            lastBlock.addInstruction(brIfEnd);
-        }
+        /*末尾追加跳过else语句*/
+        IrBr skipElse = new IrBr("#");
+        IrBasicBlock skipElseBlock = new IrBasicBlock(funcName + this.nameCnt.getCnt());
+        skipElseBlock.addInstruction(skipElse);
+        this.basicBlocks.add(skipElseBlock);
         // 分析else-stmt
         int elseBeginLabel = this.nameCnt.getCntOnly();
         if (elseStmt != null) {
@@ -208,9 +208,7 @@ public class IrBasicBlockBuilder {
         IrBr irBr = (IrBr) instruction;
         irBr.setFalseLabel(funcName + elseBeginLabel);
         // 跳转到接下来的基本块
-        if (brIfEnd != null) {
-            brIfEnd.setLabel(funcName + this.nameCnt.getCntOnly());
-        }
+        skipElse.setLabel(funcName + this.nameCnt.getCntOnly());
     }
 
     public ArrayList<ArrayList<IrBasicBlock>> genCond(Cond cond) {

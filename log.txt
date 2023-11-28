@@ -3,3 +3,15 @@
 2. 前修复testfile5的bug，应该是寄存器出锅
 3. mips_symbol应该单独建类
 4. 只有在alloc时才不是临时变量吗？
+5. testfile5有可能是无符号操作带来的问题吗
+
+sumOffset?
+为什么改成divu后test6反而错了一半
+
+11.26
+if语句嵌套：
+可以在if-block末尾加一个跳转到else结尾的block
+参数加入顺序
+短路求值正确性
+跳转回之前要清空寄存器吗
+    一个function一张符号表一个寄存器管理实例

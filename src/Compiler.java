@@ -1,7 +1,5 @@
 import backend.MipsBuilder;
 import backend.MipsModule;
-import frontend.io.ParserOutput;
-import midend.error.ErrorTable;
 import midend.llvmIr.IrModule;
 import midend.symbol.SymbolTable;
 import frontend.lexer.Lexer;
