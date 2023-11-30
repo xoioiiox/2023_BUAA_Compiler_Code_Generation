@@ -33,22 +33,24 @@ public class MipsRegManager {
         for (int i = 0; i < 8; i++) {
             if (isUsed.get(i)) {
                 String name = reg_SymbolMap.get(i);
-                int offset;
-                if (this.symbolTable.getSymbolMap().containsKey(name)) {
-                    offset = this.symbolTable.getOffset(name);
+                if (!this.symbolTable.isUsedTempVal(name)) {
+                    int offset;
+                    if (this.symbolTable.getSymbolMap().containsKey(name)) {
+                        offset = this.symbolTable.getOffset(name);
+                    }
+                    else {
+                        offset = this.symbolTable.getOffset(null);
+                        this.symbolTable.getSymbolMap().put(name, offset);
+                    }
+                    Sw sw = new Sw(new MipsReg(8 + i), new MipsReg(30), offset);
+                    mipsInstructions.add(sw);
                 }
-                else {
-                    offset = this.symbolTable.getOffset(null);
-                    this.symbolTable.getSymbolMap().put(name, offset);
-                }
-                Sw sw = new Sw(new MipsReg(8 + i), new MipsReg(30), offset);
-                mipsInstructions.add(sw);
                 isUsed.set(i, false);
             }
         }
-        this.symbol_RegMap = new HashMap<>();
-        this.reg_SymbolMap = new HashMap<>();
-        this.protectList = new ArrayList<>();
+        this.symbol_RegMap.clear();
+        this.reg_SymbolMap.clear();
+        this.protectList.clear();
         ptr = 0;
     }
 
@@ -66,15 +68,9 @@ public class MipsRegManager {
         }
         // 如果不在现有的寄存器中，那么分配一个寄存器，将其值从内存中调入
         MipsReg reg = getEmptyReg(mipsInstructions, objectName);
-        if (isConst(objectName)) {
-            Li li = new Li(reg, Integer.parseInt(objectName));
-            mipsInstructions.add(li);
-        }
-        else {
-            int offset = this.symbolTable.getOffset(objectName); // 一定已经分配内存了！！
-            Lw lw = new Lw(reg, new MipsReg(30), offset);
-            mipsInstructions.add(lw);
-        }
+        int offset = this.symbolTable.getOffset(objectName); // 一定已经分配内存了！！
+        Lw lw = new Lw(reg, new MipsReg(30), offset);
+        mipsInstructions.add(lw);
         return reg;
     }
 
@@ -88,7 +84,7 @@ public class MipsRegManager {
             }
             else {
                 String oldName = reg_SymbolMap.get(i);
-                if (symbolTable.isUsed(oldName) && !this.protectList.contains(i + 8)) {
+                if (symbolTable.isUsedTempVal(oldName) && !this.protectList.contains(i + 8)) {
                     if (i == ptr) {
                         ptr = (ptr + 1) % 8;
                     }
@@ -125,11 +121,7 @@ public class MipsRegManager {
             symbol_RegMap.put(newName, new MipsReg(num + 8));
             return new MipsReg(num + 8);
         }
-        return null;
-    }
-
-    public boolean isConst(String name) {
-        return !name.contains("@") && !name.contains("%");
+        throw new RuntimeException("no reg to use");
     }
 
 }

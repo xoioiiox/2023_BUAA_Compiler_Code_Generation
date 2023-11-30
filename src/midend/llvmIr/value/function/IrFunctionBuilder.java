@@ -87,7 +87,7 @@ public class IrFunctionBuilder {
                 = new IrBasicBlockBuilder(funcDef.getIdent().getVal() + "_", symbolTable, funcDef.getBlock(), nameCnt);
         ArrayList<IrBasicBlock> blocks = basicBlockBuilder.genIrBasicBlock();
         function.setBasicBlocks(blocks);
-        if (funcDef.getFuncType().getType() == -1) { //void 一律在末尾加return
+        if (funcDef.getFuncType().getType() == -1) { //void 一律在末尾加return todo 会有吗
             IrBasicBlock basicBlock = new IrBasicBlock(funcDef.getIdent().getVal() +"_" + this.nameCnt.getCnt());
             blocks.add(basicBlock);
             IrRet irRet = new IrRet(new IrVoidType(), false);

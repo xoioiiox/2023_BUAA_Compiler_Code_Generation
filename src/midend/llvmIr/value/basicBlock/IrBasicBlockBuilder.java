@@ -5,14 +5,11 @@ import frontend.lexer.Token;
 import frontend.parser.expression.*;
 import frontend.parser.statement.*;
 import midend.llvmIr.IrValue;
-import midend.llvmIr.type.IrFunctionType;
 import midend.llvmIr.type.IrIntType;
 import midend.llvmIr.type.IrValueType;
 import midend.llvmIr.value.function.NameCnt;
 import midend.llvmIr.value.instruction.IrInstruction;
 import midend.llvmIr.value.instruction.IrInstructionBuilder;
-import midend.llvmIr.value.instruction.binary.IrBinaryInst;
-import midend.llvmIr.value.instruction.binary.IrBinaryType;
 import midend.llvmIr.value.instruction.cond.IrBr;
 import midend.llvmIr.value.instruction.cond.IrIcmp;
 import midend.llvmIr.value.instruction.cond.IrIcmpType;
@@ -106,7 +103,7 @@ public class IrBasicBlockBuilder {
             basicBlock.getInstructions().addAll(instructionBuilder.genIrInstruction());
         }
         // 处理cond
-        String condLabel = String.valueOf(this.nameCnt.getCntOnly());
+        int condLabel = this.nameCnt.getCntOnly();
         ArrayList<ArrayList<IrBasicBlock>> blocks = new ArrayList<>();
         Cond cond = stmtFor.getCond();
         if (cond != null) {
@@ -119,10 +116,10 @@ public class IrBasicBlockBuilder {
         IrBasicBlockBuilder irBasicBlockBuilder = new IrBasicBlockBuilder(this.funcName, this.symbolTable, block1, this.nameCnt);
         ArrayList<IrBasicBlock> irBasicBlocks = irBasicBlockBuilder.genIrBasicBlock(); //过程中会自动新建基本块
         this.basicBlocks.addAll(irBasicBlocks);
-        ArrayList<IrBr> breaks = irBasicBlockBuilder.getBreaks();
+        ArrayList<IrBr> breaks = irBasicBlockBuilder.getBreaks(); //todo 新建list和this.breaks的区别
         ArrayList<IrBr> continues = irBasicBlockBuilder.getContinues();
         // forStmt2增量语句
-        String forStmt2Begin = String.valueOf(this.nameCnt.getCntOnly());
+        int forStmt2Begin = this.nameCnt.getCntOnly();
         IrBasicBlock forStmt2Block = new IrBasicBlock(funcName + this.nameCnt.getCnt());
         this.basicBlocks.add(forStmt2Block);
         ForStmt forStmt2 = stmtFor.getForStmt2();
@@ -136,7 +133,7 @@ public class IrBasicBlockBuilder {
         // 末尾追加跳转到For头语句
         IrBr brCondBegin = new IrBr(funcName + condLabel);
         forStmt2Block.addInstruction(brCondBegin);
-        String forEndLabel = String.valueOf(this.nameCnt.getCntOnly());
+        int forEndLabel = this.nameCnt.getCntOnly();
         if (cond != null) {
             // 最后一个与语句的各个子句错误应跳转到for后
             ArrayList<IrBasicBlock> basicBlocks = blocks.get(blocks.size() - 1);
@@ -217,8 +214,7 @@ public class IrBasicBlockBuilder {
         for (LAndExp lAndExp : lAndExps) {
             lAndBlocks.add(genLAndExp(lAndExp));
         }
-        int num = this.nameCnt.getCntOnly(); // stmt1对应序号
-        String LorExpEnd = String.valueOf(num);
+        int LorExpEnd = this.nameCnt.getCntOnly(); // stmt1对应序号
         for (ArrayList<IrBasicBlock> blocks: lAndBlocks) {
             // 对于或语句中每一个与语句的最后一条eq语句，若true则证明整个与语句为真，可直接跳转到stmt1（即或语句末尾
             IrBasicBlock basicBlock = blocks.get(blocks.size() - 1);
@@ -234,8 +230,7 @@ public class IrBasicBlockBuilder {
         for (EqExp eqExp : eqExps) {
             eqExpBlocks.add(genEqExp(eqExp));
         }
-        int num = this.nameCnt.getCntOnly();
-        String lAndEnd = String.valueOf(num);
+        int lAndEnd = this.nameCnt.getCntOnly();
         for (IrBasicBlock basicBlock : eqExpBlocks) {
             IrInstruction instruction = basicBlock.getInstructions().get(basicBlock.getInstructions().size() - 1); // 应该是br语句
             IrBr irBr = (IrBr) instruction;

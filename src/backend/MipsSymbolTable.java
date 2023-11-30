@@ -4,35 +4,35 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MipsSymbolTable {
-    private static int sumOffset;
+    private int sumOffset;
     private HashMap<String, Integer> symbolMap;
-    private ArrayList<String> isUsed;
-    private ArrayList<String> notTemp;
+    private ArrayList<String> usedTempVals;
+    private ArrayList<String> localVals;
     private ArrayList<String> specialBase;
 
-    public MipsSymbolTable(int sumOffset) {
-        MipsSymbolTable.sumOffset = sumOffset;
+    public MipsSymbolTable() {
+        this.sumOffset = 0;
         this.symbolMap = new HashMap<>();
-        this.isUsed = new ArrayList<>();
-        this.notTemp = new ArrayList<>();
+        this.usedTempVals = new ArrayList<>();
+        this.localVals = new ArrayList<>();
         this.specialBase = new ArrayList<>();
     }
 
-    public void addNotTemp(String name) {
-        this.notTemp.add(name);
+    public void addLocalVal(String name) {
+        this.localVals.add(name);
     }
 
     // 这里的isTemp包括临时变量，常数，全局变量
-    public boolean isTemp(String name) {
-        return !this.notTemp.contains(name);
+    public boolean isLocalVal(String name) {
+        return this.localVals.contains(name);
     }
 
-    public void addUsed(String name) {
-        this.isUsed.add(name);
+    public void addUsedTempVal(String name) {
+        this.usedTempVals.add(name);
     }
 
-    public boolean isUsed(String name) {
-        return isUsed.contains(name);
+    public boolean isUsedTempVal(String name) {
+        return usedTempVals.contains(name);
     }
 
     public void addSpecialBase(String name) {
@@ -48,6 +48,9 @@ public class MipsSymbolTable {
     }
 
     public int getOffset(String name) {
+        if (name != null && !this.symbolMap.containsKey(name)) {
+            throw new RuntimeException("haven't record symbol");
+        }
         if (this.symbolMap.containsKey(name)) {
             return this.symbolMap.get(name);
         }

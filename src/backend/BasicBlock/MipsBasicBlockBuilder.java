@@ -30,7 +30,7 @@ public class MipsBasicBlockBuilder {
                     = new MipsInstructionBuilder(instruction, symbolTable, isMainFunc, mipsRegManager);
             mipsInstructions.addAll(mipsInstructionBuilder.genMipsInstruction());
         }
-        MipsBasicBlock mipsBasicBlock = new MipsBasicBlock(this.basicBlock.getName(), mipsInstructions);
-        return mipsBasicBlock;
+        this.mipsRegManager.restore(mipsInstructions); // 基本块结束后将寄存器值放回内存
+        return new MipsBasicBlock(this.basicBlock.getName(), mipsInstructions);
     }
 }
