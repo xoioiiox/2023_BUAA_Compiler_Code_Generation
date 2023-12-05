@@ -109,15 +109,18 @@ public class IrInstructionBuilder {
                 /*---内存分配指令---*/
                 IrAlloca irAlloca = new IrAlloca(valueType, value);
                 this.irInstructions.add(irAlloca);
+                int initVal = 0;
                 if (constDef.getConstInitVal() != null) {
+                    initVal = constDef.getConstInitVal().getConstExp().calculate(symbolTable);
                     Exp exp = new Exp(constDef.getConstInitVal().getConstExp().getAddExp());
                     IrValue value1 = genExp(exp);
                     IrStore irStore = new IrStore(value, value1); //todo right?
                     this.irInstructions.add(irStore);
                 }
                 /*---填入符号表---*/
-                Symbol symbol = new SymbolVar(constDef.getIdent().getVal(), constDef.getDimension(), value);
+                SymbolCon symbol = new SymbolCon(constDef.getIdent().getVal(), constDef.getDimension(), value);
                 this.symbolTable.addSymbol(symbol);
+                symbol.setInitVal(initVal);
             }
             else if (dim == 1) {
                 /*---定义类型和值，并分配内存---*/

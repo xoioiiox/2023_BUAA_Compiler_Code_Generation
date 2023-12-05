@@ -354,6 +354,7 @@ public class MipsInstructionBuilder {
         this.mipsInstructions.add(move);
     }
 
+    //todo 超过8个参数
     public void genMipsCallFunc(IrCall irCall) {
         // 保存$ra，防止覆盖
         Sw sw = new Sw(new MipsReg(31), new MipsReg(29), 0);
@@ -376,6 +377,7 @@ public class MipsInstructionBuilder {
             this.mipsInstructions.add(sw1);
             symbolTable.addUsedTempVal(param.getName());
         }
+        mipsRegManager.cleanData();
         // 调整fp指针位置
         Addiu addiu1 = new Addiu(new MipsReg(30), new MipsReg(30), fpOffset);
         this.mipsInstructions.add(addiu1);

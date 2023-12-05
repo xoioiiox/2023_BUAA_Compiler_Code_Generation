@@ -29,6 +29,16 @@ public class MipsRegManager {
         this.ptr = 0;
     }
 
+    public void cleanData() {
+        this.symbol_RegMap.clear();
+        this.reg_SymbolMap.clear();
+        for (int i = 0; i < 8; i++) {
+            isUsed.set(i, false);
+        }
+        this.protectList.clear();
+        this.ptr = 0;
+    }
+
     public void restore(ArrayList<MipsInstruction> mipsInstructions) {
         for (int i = 0; i < 8; i++) {
             if (isUsed.get(i)) {
@@ -45,8 +55,8 @@ public class MipsRegManager {
                     Sw sw = new Sw(new MipsReg(8 + i), new MipsReg(30), offset);
                     mipsInstructions.add(sw);
                 }
-                isUsed.set(i, false);
             }
+            isUsed.set(i, false);
         }
         this.symbol_RegMap.clear();
         this.reg_SymbolMap.clear();
